@@ -4,10 +4,6 @@ version: "3.9"
 # Compatible 100% avec docker-compose.prod.yml (mêmes images, mêmes services)
 # Différences dev : ports exposés, volumes bind mounts, logs verbeux
 
-# Load environment variables from .env file
-env_file:
-  - .env
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -68,13 +64,13 @@ services:
       LIVEKIT_URL: ${LIVEKIT_URL}
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
-      GF_SPAWN_MODE: ${GF_SPAWN_MODE:-local}
+      GF_SPAWN_MODE: ${GF_SPAWN_MODE:-mock}
       GF_BINARY_PATH: ${GF_BINARY_PATH}
       STATS_SERVICE_URL: http://stats:8000
       LOG_LEVEL: debug
     volumes:
       - ./session:/app
-      - ${GF_BINARY_PATH}:/usr/local/bin/gf_server:ro  # Mount GF binary
+      # - ${GF_BINARY_PATH}:/usr/local/bin/gf_server:ro  # Mount GF binary (uncomment for local mode)
     depends_on:
       postgres:
         condition: service_healthy

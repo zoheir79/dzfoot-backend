@@ -31,6 +31,11 @@ async def shutdown():
         await redis.close()
 
 
+@app.get("/health")
+async def health():
+    return {"status": "ok", "service": "stats"}
+
+
 class MatchResult(BaseModel):
     player_a: str
     player_b: str

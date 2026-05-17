@@ -20,7 +20,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret")
 LK_URL = os.getenv("LIVEKIT_URL", "")
 LK_KEY = os.getenv("LIVEKIT_API_KEY", "")
 LK_SECRET = os.getenv("LIVEKIT_API_SECRET", "")
-DATABASE_URL = os.getenv("DATABASE_URL", "")
+DATABASE_URL = os.getenv("DATABASE_URL", "").replace("+asyncpg", "")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 # Connections
@@ -41,6 +41,11 @@ async def shutdown():
         await pool.close()
     if redis:
         await redis.close()
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok", "service": "account"}
 
 
 class RegisterRequest(BaseModel):

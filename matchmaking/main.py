@@ -29,6 +29,11 @@ async def shutdown():
         await redis.close()
 
 
+@app.get("/health")
+async def health():
+    return {"status": "ok", "service": "matchmaking"}
+
+
 class QueueRequest(BaseModel):
     stadium_pref: Optional[str] = None
 

@@ -39,6 +39,11 @@ async def startup():
     asyncio.create_task(check_match_timeouts())
 
 
+@app.get("/health")
+async def health():
+    return {"status": "ok", "service": "session"}
+
+
 @app.on_event("shutdown")
 async def shutdown():
     if redis:
@@ -174,8 +179,22 @@ async def create_match(req: CreateMatchRequest):
         }
         await redis.lpush("gf.spawn", json.dumps(spawn_request))
         active_matches[room_id] = {"queued": True, "players": [req.player_a, req.player_b], "started_at": datetime.utcnow().isoformat(), "duration": req.duration}
+    elif spawn_mode == "mock":
+        # Mock GF for PoC V1 (no C++ binary needed)
+        env = os.environ.copy()
+        env["ROOM_ID"] = room_id
+        env["REDIS_URL"] = REDIS_URL
+        env["DURATION"] = str(req.duration)
+        proc = await asyncio.create_subprocess_exec(
+            "python3", "/app/mock_gf_server.py",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            env=env,
+        )
+        active_matches[room_id] = {"proc": proc, "pid": proc.pid, "players": [req.player_a, req.player_b], "started_at": datetime.utcnow().isoformat(), "duration": req.duration}
+        asyncio.create_task(monitor_process(room_id, proc))
     else:
-        # Local subprocess (single-node dev)
+        # Local subprocess (single-node dev, real C++ binary)
         proc = await asyncio.create_subprocess_exec(
             GF_BINARY_PATH,
             f"--room-id={room_id}",

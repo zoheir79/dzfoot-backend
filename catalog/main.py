@@ -33,6 +33,11 @@ async def shutdown():
         await redis.close()
 
 
+@app.get("/health")
+async def health():
+    return {"status": "ok", "service": "catalog"}
+
+
 @app.get("/teams")
 async def list_teams():
     cached = await redis.get("teams:all")
