@@ -64,6 +64,10 @@ RestartSec=5
 User=ubuntu
 Environment="REDIS_URL=redis://YOUR_REDIS_HOST:6379"
 Environment="LIVEKIT_URL=wss://your-livekit.com"
+Environment="STATS_URL=http://stats:8000"
+Environment="GF_BINARY=/usr/local/bin/gf_server"
+Environment="LOG_DIR=/var/log/dzfoot"
+Environment="HEARTBEAT_INTERVAL=10"
 
 [Install]
 WantedBy=multi-user.target
@@ -74,44 +78,24 @@ sudo systemctl enable gf-worker
 sudo systemctl start gf-worker
 ```
 
-## Worker Script (gf-worker.sh)
+## Worker Script
+
+The actual `gf-worker.sh` is maintained in the `dzfoot-gf-server` repo and includes heartbeat, crash detection, and proper process monitoring. **Do not copy the old snippet below — use the real file:**
 
 ```bash
-#!/bin/bash
-# Polls Redis queue for match spawn requests
-# Runs continuously on each GF VM
-
-REDIS_URL="${REDIS_URL:-redis://localhost:6379}"
-GF_BINARY="/usr/local/bin/gf_server"
-
-while true; do
-    # Block until a spawn request arrives
-    REQUEST=$(redis-cli -u "$REDIS_URL" BRPOP "gf.spawn" 10)
-    if [ -z "$REQUEST" ]; then
-        continue
-    fi
-    
-    # Parse request JSON (simplified)
-    ROOM_ID=$(echo "$REQUEST" | jq -r '.room_id')
-    TOKEN=$(echo "$REQUEST" | jq -r '.token')
-    TEAM_A=$(echo "$REQUEST" | jq -r '.team_a')
-    TEAM_B=$(echo "$REQUEST" | jq -r '.team_b')
-    DURATION=$(echo "$REQUEST" | jq -r '.duration')
-    
-    # Spawn GF process
-    $GF_BINARY \
-        --room-id="$ROOM_ID" \
-        --team-a="$TEAM_A" \
-        --team-b="$TEAM_B" \
-        --duration="$DURATION" \
-        --livekit-url="$LIVEKIT_URL" \
-        --livekit-token="$TOKEN" \
-        --stats-url="http://stats:8000" \
-        &
-    
-    echo "Spawned GF for room $ROOM_ID (PID $!)"
-done
+# Copy from dzfoot-gf-server repo
+curl -o /usr/local/bin/gf-worker.sh \
+  https://raw.githubusercontent.com/zoheir79/dzfoot-gf-server/main/scripts/gf-worker.sh
+chmod +x /usr/local/bin/gf-worker.sh
 ```
+
+Features of the real script:
+- Heartbeat loop (`gf.workers` hash in Redis)
+- `BRPOP` queue polling with 10s timeout
+- `nohup` + subshell structured spawn
+- Watchdog with `wait "$PID"` for real exit codes
+- Publishes `gf.ready`, `gf.crashed`, `gf.finished`
+- Cleanup on SIGTERM (kill all active GF processes)
 
 ## Scaling Formula
 

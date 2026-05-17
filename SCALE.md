@@ -21,6 +21,8 @@ Docker Compose DNS automatically load-balances across all containers of the same
 
 `nginx` upstream `account_backend` → `server account:8000;` gets all 3 IPs via Docker DNS.
 
+**Important**: Use `resolver 127.0.0.11 valid=5s;` in nginx.conf so upstream IPs are refreshed when replicas change. Without this, nginx may cache the initial DNS resolution and miss new replicas.
+
 ## Resource limits per service (prod override)
 
 | Service | CPU limit | RAM limit | Replicas |

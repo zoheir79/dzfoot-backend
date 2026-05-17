@@ -4,6 +4,10 @@ version: "3.9"
 # Compatible 100% avec docker-compose.prod.yml (mêmes images, mêmes services)
 # Différences dev : ports exposés, volumes bind mounts, logs verbeux
 
+# Load environment variables from .env file
+env_file:
+  - .env
+
 services:
   postgres:
     image: postgres:16-alpine

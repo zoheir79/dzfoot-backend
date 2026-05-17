@@ -52,11 +52,11 @@ async def join_queue(req: QueueRequest, authorization: str = Header(...)):
     member = f"{user_id}:{req.stadium_pref or 'any'}"
     await redis.zadd("queue:global", {member: elo})
 
-    asyncio.create_task(try_match(user_id, elo, authorization))
+    asyncio.create_task(try_match(user_id, elo, authorization, req.stadium_pref or 'any'))
     return {"status": "waiting"}
 
 
-async def try_match(player_id: str, elo: int, auth_header: str):
+async def try_match(player_id: str, elo: int, auth_header: str, stadium_pref: str):
     await asyncio.sleep(3)
     candidates = await redis.zrangebyscore("queue:global", elo - 200, elo + 200)
     candidates = [c for c in candidates if not c.startswith(player_id)]
@@ -66,8 +66,9 @@ async def try_match(player_id: str, elo: int, auth_header: str):
     opponent_entry = candidates[0]
     opponent_id = opponent_entry.split(":")[0]
 
-    # Remove both from queue
-    await redis.zrem("queue:global", f"{player_id}:*", f"{opponent_id}:*")
+    # Remove both from queue (exact members, not wildcards)
+    await redis.zrem("queue:global", opponent_entry)
+    await redis.zrem("queue:global", f"{player_id}:{stadium_pref}")
 
     # Create match via Session Service
     async with httpx.AsyncClient() as client:

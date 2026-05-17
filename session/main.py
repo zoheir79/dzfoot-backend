@@ -31,10 +31,10 @@ async def startup():
     global redis, lkapi
     redis = await aioredis.from_url(REDIS_URL, decode_responses=True)
     lkapi = LiveKitAPI(url=LK_URL, api_key=LK_KEY, api_secret=LK_SECRET)
-    # Start background listeners
-    asyncio.create_task(listen_gf_ready())
-    asyncio.create_task(listen_gf_crashed())
-    asyncio.create_task(listen_gf_finished())
+    # Start background listeners (each with dedicated Redis connection)
+    asyncio.create_task(_pubsub_listener("gf.ready", _handle_gf_ready))
+    asyncio.create_task(_pubsub_listener("gf.crashed", _handle_gf_crashed))
+    asyncio.create_task(_pubsub_listener("gf.finished", _handle_gf_finished))
     asyncio.create_task(check_worker_health())
     asyncio.create_task(check_match_timeouts())
 
@@ -45,55 +45,50 @@ async def shutdown():
         await redis.close()
 
 
-# === Circuit: Listen for GF ready signal ===
-async def listen_gf_ready():
-    """Listen for GF servers announcing they are ready to handle a match."""
-    pubsub = redis.pubsub()
-    await pubsub.subscribe("gf.ready")
-    async for message in pubsub.listen():
-        if message["type"] == "message":
-            room_id = message["data"]
-            if room_id in active_matches:
-                active_matches[room_id]["status"] = "running"
-                active_matches[room_id]["gf_ready_at"] = datetime.utcnow().isoformat()
-                print(f"[Session] GF ready for room {room_id}")
+async def _pubsub_listener(channel: str, handler):
+    """Dedicated Redis pubsub connection per listener."""
+    ps = await aioredis.from_url(REDIS_URL, decode_responses=True)
+    pubsub = ps.pubsub()
+    await pubsub.subscribe(channel)
+    try:
+        async for message in pubsub.listen():
+            if message["type"] == "message":
+                await handler(message["data"])
+    finally:
+        await ps.close()
 
 
-# === Circuit: Listen for GF crashes ===
-async def listen_gf_crashed():
-    """Listen for GF server crashes and handle recovery."""
-    pubsub = redis.pubsub()
-    await pubsub.subscribe("gf.crashed")
-    async for message in pubsub.listen():
-        if message["type"] == "message":
-            room_id = message["data"]
-            print(f"[Session] GF crashed for room {room_id}")
-            if room_id in active_matches:
-                active_matches[room_id]["status"] = "crashed"
-                active_matches[room_id]["crashed_at"] = datetime.utcnow().isoformat()
-                # Option: requeue for respawn or notify players
-                await redis.publish("match.crashed", room_id)
-                # Cleanup after notification
-                await asyncio.sleep(60)  # Give clients time to handle
-                active_matches.pop(room_id, None)
-                await redis.delete(f"room:{room_id}")
+async def _handle_gf_ready(room_id):
+    if room_id in active_matches:
+        active_matches[room_id]["status"] = "running"
+        active_matches[room_id]["gf_ready_at"] = datetime.utcnow().isoformat()
+        print(f"[Session] GF ready for room {room_id}")
 
 
-# === Circuit: Listen for GF match finished ===
-async def listen_gf_finished():
-    """Listen for GF servers finishing matches normally."""
-    pubsub = redis.pubsub()
-    await pubsub.subscribe("gf.finished")
-    async for message in pubsub.listen():
-        if message["type"] == "message":
-            room_id = message["data"]
-            print(f"[Session] GF finished for room {room_id}")
-            if room_id in active_matches:
-                active_matches[room_id]["status"] = "finished"
-                active_matches[room_id]["finished_at"] = datetime.utcnow().isoformat()
-                await redis.publish("match.finished", room_id)
-                active_matches.pop(room_id, None)
-                await redis.delete(f"room:{room_id}")
+async def _handle_gf_crashed(room_id):
+    print(f"[Session] GF crashed for room {room_id}")
+    if room_id in active_matches:
+        active_matches[room_id]["status"] = "crashed"
+        active_matches[room_id]["crashed_at"] = datetime.utcnow().isoformat()
+        await redis.publish("match.crashed", room_id)
+        # Async cleanup so listener stays responsive
+        asyncio.create_task(_cleanup_after_crash(room_id))
+
+
+async def _cleanup_after_crash(room_id):
+    await asyncio.sleep(60)
+    active_matches.pop(room_id, None)
+    await redis.delete(f"room:{room_id}")
+
+
+async def _handle_gf_finished(room_id):
+    print(f"[Session] GF finished for room {room_id}")
+    if room_id in active_matches:
+        active_matches[room_id]["status"] = "finished"
+        active_matches[room_id]["finished_at"] = datetime.utcnow().isoformat()
+        await redis.publish("match.finished", room_id)
+        active_matches.pop(room_id, None)
+        await redis.delete(f"room:{room_id}")
 
 
 # === Circuit: Check worker health (detect dead VMs) ===
@@ -177,8 +172,8 @@ async def create_match(req: CreateMatchRequest):
             "stadium_id": req.stadium_id or "default-stadium",
             "duration": req.duration,
         }
-        await redis.lpush("gf.spawn", str(spawn_request))
-        active_matches[room_id] = {"queued": True, "players": [req.player_a, req.player_b]}
+        await redis.lpush("gf.spawn", json.dumps(spawn_request))
+        active_matches[room_id] = {"queued": True, "players": [req.player_a, req.player_b], "started_at": datetime.utcnow().isoformat(), "duration": req.duration}
     else:
         # Local subprocess (single-node dev)
         proc = await asyncio.create_subprocess_exec(
@@ -191,10 +186,11 @@ async def create_match(req: CreateMatchRequest):
             f"--livekit-url={LK_URL}",
             f"--livekit-token={gf_token}",
             f"--stats-url={STATS_SERVICE_URL}",
+            f"--redis-url={REDIS_URL}",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        active_matches[room_id] = {"proc": proc, "pid": proc.pid, "players": [req.player_a, req.player_b]}
+        active_matches[room_id] = {"proc": proc, "pid": proc.pid, "players": [req.player_a, req.player_b], "started_at": datetime.utcnow().isoformat(), "duration": req.duration}
         asyncio.create_task(monitor_process(room_id, proc))
 
     # 4. Store match info in Redis (short TTL for matchmaking polling)
@@ -203,17 +199,21 @@ async def create_match(req: CreateMatchRequest):
         "livekit_url": LK_URL,
         "players": [req.player_a, req.player_b],
     }
-    await redis.setex(f"match:{req.player_a}", 120, str(match_info))
-    await redis.setex(f"match:{req.player_b}", 120, str(match_info))
-    await redis.setex(f"room:{room_id}", 3600, str(match_info))
+    match_json = json.dumps(match_info)
+    await redis.setex(f"match:{req.player_a}", 120, match_json)
+    await redis.setex(f"match:{req.player_b}", 120, match_json)
+    await redis.setex(f"room:{room_id}", 3600, match_json)
 
     return {"room_id": room_id, "livekit_url": LK_URL}
 
 
 async def monitor_process(room_id: str, proc: asyncio.subprocess.Process):
-    await proc.wait()
+    exit_code = await proc.wait()
     active_matches.pop(room_id, None)
-    await redis.publish("match.finished", room_id)
+    if exit_code != 0:
+        await redis.publish("gf.crashed", room_id)
+    else:
+        await redis.publish("match.finished", room_id)
     await redis.delete(f"room:{room_id}")
 
 

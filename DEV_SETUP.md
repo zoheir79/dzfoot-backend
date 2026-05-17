@@ -113,7 +113,8 @@ curl http://localhost:8002/health
 cd ../dzfoot-gf-server
 
 # Build
-cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)
+mkdir -p build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)
 
 # Tester en mode local (sans LiveKit)
 ./gf_server \
@@ -170,8 +171,8 @@ Dans un terminal Windows (PowerShell ou CMD) :
 # Forwarder le port 8080 de la machine dev vers l'émulateur
 adb reverse tcp:8080 tcp:8080
 
-# Vérifier que l'émulateur voit le backend
-adb shell curl http://localhost:8080/health
+# Vérifier que le port forward fonctionne (depuis le host Windows)
+curl http://localhost:8080/health
 ```
 
 **Si la machine dev est sur le réseau local** (pas WSL2) :

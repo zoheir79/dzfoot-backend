@@ -12,13 +12,14 @@ docker-compose up --build
 
 ## Services
 
-| Service | Port | Role |
-|---|---|---|
-| Account | 8001 | Auth, JWT, profiles, friends |
-| Session | 8002 | Spawn GF server, LiveKit rooms |
-| Matchmaking | 8003 | ELO queue, match pairing |
-| Stats | 8004 | Match history, leaderboard, ELO |
-| Catalog | 8005 | Teams, players, stadiums |
+| Service | Port (dev) | Port (prod) | Role |
+|---|---|---|---|
+| Account | 8001 | internal only | Auth, JWT, profiles, friends |
+| Session | 8002 | internal only | Spawn GF server, LiveKit rooms |
+| Matchmaking | 8003 | internal only | ELO queue, match pairing |
+| Stats | 8004 | internal only | Match history, leaderboard, ELO |
+| Catalog | 8005 | internal only | Teams, players, stadiums |
+| Nginx | 8080 | 80/443 | API Gateway (public entrypoint) |
 
 ## Architecture
 
