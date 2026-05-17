@@ -1,0 +1,89 @@
+version: "3.9"
+
+# Production Docker Compose — Scaling without K8s
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --scale account=3 --scale session=3 --scale matchmaking=2 --scale stats=2 --scale catalog=2
+
+services:
+  postgres:
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          memory: 512M
+    restart: unless-stopped
+
+  redis:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    restart: unless-stopped
+
+  # Backend services — scalable via docker-compose up --scale service=N
+  # nginx upstream auto-discovers all containers via Docker DNS
+  account:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    restart: unless-stopped
+
+  session:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    restart: unless-stopped
+
+  matchmaking:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    restart: unless-stopped
+
+  stats:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    restart: unless-stopped
+
+  catalog:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    restart: unless-stopped
+
+  nginx:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+      placement:
+        constraints:
+          - node.role == manager
+    restart: unless-stopped
+
+# GF Worker pool (optional — start separately on VMs with GF binary)
+# These workers consume match spawn requests from Redis queue
+# Session Service publishes to Redis instead of local subprocess
+#  gf-worker:
+#    build: ./gf-worker  # Thin wrapper that polls Redis and starts GF
+#    deploy:
+#      replicas: 2
+#      resources:
+#        limits:
+#          cpus: '2.0'
+#          memory: 2G
+#    restart: unless-stopped

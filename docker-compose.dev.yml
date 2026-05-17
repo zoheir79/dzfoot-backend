@@ -1,0 +1,145 @@
+version: "3.9"
+
+# DZFoot DEVELOPMENT stack — All-in-one local machine
+# Compatible 100% avec docker-compose.prod.yml (mêmes images, mêmes services)
+# Différences dev : ports exposés, volumes bind mounts, logs verbeux
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: dzfoot
+      POSTGRES_PASSWORD: dzfoot
+      POSTGRES_DB: dzfoot
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./init_db.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dzfoot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  account:
+    build: ./account
+    ports:
+      - "8001:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://dzfoot:dzfoot@postgres:5432/dzfoot
+      REDIS_URL: redis://redis:6379
+      LIVEKIT_URL: ${LIVEKIT_URL}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      SECRET_KEY: ${APP_SECRET_KEY}
+      LOG_LEVEL: debug
+    volumes:
+      - ./account:/app  # Hot reload dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  session:
+    build: ./session
+    ports:
+      - "8002:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://dzfoot:dzfoot@postgres:5432/dzfoot
+      REDIS_URL: redis://redis:6379
+      LIVEKIT_URL: ${LIVEKIT_URL}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      GF_SPAWN_MODE: ${GF_SPAWN_MODE:-local}
+      GF_BINARY_PATH: ${GF_BINARY_PATH}
+      STATS_SERVICE_URL: http://stats:8000
+      LOG_LEVEL: debug
+    volumes:
+      - ./session:/app
+      - ${GF_BINARY_PATH}:/usr/local/bin/gf_server:ro  # Mount GF binary
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  matchmaking:
+    build: ./matchmaking
+    ports:
+      - "8003:8000"
+    environment:
+      REDIS_URL: redis://redis:6379
+      SESSION_URL: http://session:8000
+      ACCOUNT_URL: http://account:8000
+      LOG_LEVEL: debug
+    volumes:
+      - ./matchmaking:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  stats:
+    build: ./stats
+    ports:
+      - "8004:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://dzfoot:dzfoot@postgres:5432/dzfoot
+      REDIS_URL: redis://redis:6379
+      LOG_LEVEL: debug
+    volumes:
+      - ./stats:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  catalog:
+    build: ./catalog
+    ports:
+      - "8005:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://dzfoot:dzfoot@postgres:5432/dzfoot
+      REDIS_URL: redis://redis:6379
+      LOG_LEVEL: debug
+    volumes:
+      - ./catalog:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - account
+      - session
+      - matchmaking
+      - stats
+      - catalog
+
+volumes:
+  pgdata_dev:
