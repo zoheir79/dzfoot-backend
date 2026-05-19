@@ -4,16 +4,21 @@ from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 from jose import JWTError, jwt
 import asyncpg
+import bcrypt
 import redis.asyncio as aioredis
 from livekit.api import AccessToken, VideoGrants
 
 app = FastAPI(title="DZFoot Account Service")
-pwd_ctx = CryptContext(schemes=["bcrypt"])
 security = HTTPBearer()
+
+def hash_password(pwd: str) -> str:
+    return bcrypt.hashpw(pwd.encode(), bcrypt.gensalt()).decode()
+
+def verify_password(pwd: str, hashed: str) -> bool:
+    return bcrypt.checkpw(pwd.encode(), hashed.encode())
 
 # Config
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret")
@@ -83,7 +88,7 @@ async def get_current_user(cred: HTTPAuthorizationCredentials = Depends(security
 
 @app.post("/auth/register")
 async def register(body: RegisterRequest):
-    hashed = pwd_ctx.hash(body.password)
+    hashed = hash_password(body.password)
     async with pool.acquire() as conn:
         try:
             user_id = await conn.fetchval(
@@ -99,7 +104,7 @@ async def register(body: RegisterRequest):
 async def login(body: LoginRequest):
     async with pool.acquire() as conn:
         user = await conn.fetchrow("SELECT * FROM users WHERE email=$1", body.email)
-    if not user or not pwd_ctx.verify(body.password, user["password_hash"]):
+    if not user or not verify_password(body.password, user["password_hash"]):
         raise HTTPException(401, "Invalid credentials")
     token = create_app_jwt(str(user["id"]))
     await redis.setex(f"session:{user['id']}", 86400 * 7, token)

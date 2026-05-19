@@ -61,10 +61,10 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://dzfoot:dzfoot@postgres:5432/dzfoot
       REDIS_URL: redis://redis:6379
-      LIVEKIT_URL: ${LIVEKIT_URL}
-      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
-      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
-      GF_SPAWN_MODE: ${GF_SPAWN_MODE:-mock}
+      LIVEKIT_URL: https://orch.adexgenie.ai
+      LIVEKIT_API_KEY: APIAVkwUwQPYRf4
+      LIVEKIT_API_SECRET: WiKnaaaPUfvcG4Thviw6w2XPNFWvBbJuS9sNjfzhgS8
+      GF_SPAWN_MODE: mock
       GF_BINARY_PATH: ${GF_BINARY_PATH}
       STATS_SERVICE_URL: http://stats:8000
       LOG_LEVEL: debug
@@ -76,7 +76,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    # NOTE: --reload disabled because uvicorn reloads kill spawned simulator child processes.
+    # Restart the container manually after code changes: docker restart dzfoot-backend-session-1
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
 
   matchmaking:
     build: ./matchmaking

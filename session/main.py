@@ -1,5 +1,6 @@
 import os
 import asyncio
+import subprocess
 import uuid
 import json
 from typing import Optional
@@ -164,6 +165,22 @@ async def create_match(req: CreateMatchRequest):
         .to_jwt()
     )
 
+    # 2b. Generate token for client (identity="user1")
+    client_token = (
+        AccessToken(LK_KEY, LK_SECRET)
+        .with_grants(
+            VideoGrants(
+                room_join=True,
+                room=room_id,
+                can_publish=True,
+                can_subscribe=True,
+                can_publish_data=True,
+            )
+        )
+        .with_identity("user1")
+        .to_jwt()
+    )
+
     # 3. Spawn GF — local subprocess (dev) OR Redis queue (prod VM pool)
     spawn_mode = os.getenv("GF_SPAWN_MODE", "local")  # "local" or "queue"
     
@@ -180,19 +197,30 @@ async def create_match(req: CreateMatchRequest):
         await redis.lpush("gf.spawn", json.dumps(spawn_request))
         active_matches[room_id] = {"queued": True, "players": [req.player_a, req.player_b], "started_at": datetime.utcnow().isoformat(), "duration": req.duration}
     elif spawn_mode == "mock":
-        # Mock GF for PoC V1 (no C++ binary needed)
+        # GF Simulator with physics + AI, sends GameState via LiveKit DataChannel
         env = os.environ.copy()
         env["ROOM_ID"] = room_id
         env["REDIS_URL"] = REDIS_URL
+        env["LIVEKIT_URL"] = LK_URL
+        env["GF_TOKEN"] = gf_token
         env["DURATION"] = str(req.duration)
-        proc = await asyncio.create_subprocess_exec(
-            "python3", "/app/mock_gf_server.py",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-            env=env,
-        )
-        active_matches[room_id] = {"proc": proc, "pid": proc.pid, "players": [req.player_a, req.player_b], "started_at": datetime.utcnow().isoformat(), "duration": req.duration}
-        asyncio.create_task(monitor_process(room_id, proc))
+        # Ensure PATH is set so python3 can be found
+        if not env.get("PATH"):
+            env["PATH"] = "/usr/local/bin:/usr/bin:/bin"
+        print(f"[Session] Spawning GF simulator for room {room_id}")
+        try:
+            proc = subprocess.Popen(
+                ["python3", "-u", "/app/gf_simulator.py"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=env,
+                bufsize=0,
+            )
+            print(f"[Session] GF simulator started with PID {proc.pid}")
+            active_matches[room_id] = {"proc": proc, "pid": proc.pid, "players": [req.player_a, req.player_b], "started_at": datetime.utcnow().isoformat(), "duration": req.duration}
+            asyncio.create_task(monitor_process(room_id, proc))
+        except Exception as e:
+            print(f"[Session] Failed to spawn GF simulator: {e}")
     else:
         # Local subprocess (single-node dev, real C++ binary)
         proc = await asyncio.create_subprocess_exec(
@@ -223,11 +251,33 @@ async def create_match(req: CreateMatchRequest):
     await redis.setex(f"match:{req.player_b}", 120, match_json)
     await redis.setex(f"room:{room_id}", 3600, match_json)
 
-    return {"room_id": room_id, "livekit_url": LK_URL}
+    return {"room_id": room_id, "livekit_url": LK_URL, "token": client_token}
 
 
-async def monitor_process(room_id: str, proc: asyncio.subprocess.Process):
-    exit_code = await proc.wait()
+def _stream_output(proc: subprocess.Popen, room_id: str):
+    """Read stdout/stderr line by line and print in real-time (blocking, run in thread)."""
+    import threading
+    def reader(stream, label):
+        try:
+            for line in iter(stream.readline, b""):
+                if not line:
+                    break
+                print(f"[GF {room_id}] {label}: {line.decode(errors='replace').rstrip()}", flush=True)
+        except Exception as e:
+            print(f"[GF {room_id}] {label} reader error: {e}", flush=True)
+    t_out = threading.Thread(target=reader, args=(proc.stdout, "stdout"), daemon=True)
+    t_err = threading.Thread(target=reader, args=(proc.stderr, "stderr"), daemon=True)
+    t_out.start()
+    t_err.start()
+    proc.wait()
+    t_out.join(timeout=2)
+    t_err.join(timeout=2)
+
+
+async def monitor_process(room_id: str, proc: subprocess.Popen):
+    await asyncio.to_thread(_stream_output, proc, room_id)
+    exit_code = proc.returncode
+    print(f"[GF {room_id}] process exited with code {exit_code}", flush=True)
     active_matches.pop(room_id, None)
     if exit_code != 0:
         await redis.publish("gf.crashed", room_id)
