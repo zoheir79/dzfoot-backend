@@ -72,16 +72,19 @@ async def receive_match_result(result: MatchResult):
             s = result.stats[i]
             await session.execute(
                 text("""
-                    INSERT INTO match_stats(match_id, player_id, goals, shots, passes,
-                        tackles, yellow_cards, possession_pct, distance_m)
-                    VALUES(:mid, :pid, :goals, :shots, :passes, :tackles, :yc, :pos, :dist)
+                    INSERT INTO match_stats(match_id, player_id, goals, shots, shots_on_target,
+                        passes, passes_success, tackles, yellow_cards, red_cards,
+                        possession_pct, distance_m)
+                    VALUES(:mid, :pid, :goals, :shots, :sot, :passes, :ps, :tackles,
+                           :yc, :rc, :pos, :dist)
                 """),
                 {
                     "mid": mid, "pid": pid,
                     "goals": s.get("goals", 0), "shots": s.get("shots", 0),
-                    "passes": s.get("passes", 0), "tackles": s.get("tackles", 0),
-                    "yc": s.get("yellow_cards", 0), "pos": s.get("possession_pct", 0.0),
-                    "dist": s.get("distance_m", 0.0),
+                    "sot": s.get("shots_on_target", 0), "passes": s.get("passes", 0),
+                    "ps": s.get("passes_success", 0), "tackles": s.get("tackles", 0),
+                    "yc": s.get("yellow_cards", 0), "rc": s.get("red_cards", 0),
+                    "pos": s.get("possession_pct", 0.0), "dist": s.get("distance_m", 0.0),
                 },
             )
         await session.commit()

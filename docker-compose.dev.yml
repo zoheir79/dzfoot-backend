@@ -67,9 +67,12 @@ services:
       GF_SPAWN_MODE: mock
       GF_BINARY_PATH: ${GF_BINARY_PATH}
       STATS_SERVICE_URL: http://stats:8000
+      CATALOG_URL: http://catalog:8000
+      GF_CONFIG_DIR: /app/configs
       LOG_LEVEL: debug
     volumes:
       - ./session:/app
+      - gf_configs:/app/configs
       # - ${GF_BINARY_PATH}:/usr/local/bin/gf_server:ro  # Mount GF binary (uncomment for local mode)
     depends_on:
       postgres:
@@ -145,3 +148,4 @@ services:
 
 volumes:
   pgdata_dev:
+  gf_configs:

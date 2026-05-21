@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import redis.asyncio as aioredis
+import httpx
 from livekit.api import LiveKitAPI, CreateRoomRequest, AccessToken, VideoGrants
 
 app = FastAPI(title="DZFoot Session Service")
@@ -21,6 +22,10 @@ GF_BINARY_PATH = os.getenv("GF_BINARY_PATH", "/usr/local/bin/gf_server")
 STATS_SERVICE_URL = os.getenv("STATS_SERVICE_URL", "")
 GF_SPAWN_TIMEOUT = int(os.getenv("GF_SPAWN_TIMEOUT", "30"))  # seconds to wait for GF ready
 GF_MATCH_TIMEOUT = int(os.getenv("GF_MATCH_TIMEOUT", "900"))  # max match duration + buffer
+CATALOG_URL = os.getenv("CATALOG_URL", "http://catalog:8000")
+CONFIG_DIR = os.getenv("GF_CONFIG_DIR", "/tmp/gf_configs")
+
+os.makedirs(CONFIG_DIR, exist_ok=True)
 
 redis: Optional[aioredis.Redis] = None
 lkapi: Optional[LiveKitAPI] = None
@@ -139,11 +144,117 @@ class CreateMatchRequest(BaseModel):
     team_b: Optional[str] = None
     stadium_id: Optional[str] = None
     duration: int = 600  # seconds (default 10 min)
+    mode: Optional[str] = "vs_ai"  # "1v1" or "vs_ai"
+
+
+async def _build_match_config(room_id: str, team_a_id: Optional[str], team_b_id: Optional[str], duration: int, mode: str) -> dict:
+    """Fetch formations + full player rosters with 22 skills from Catalog."""
+    left_team = {"name": "Team A", "formation": [], "players": []}
+    right_team = {"name": "Team B", "formation": [], "players": []}
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        if team_a_id:
+            try:
+                resp = await client.get(f"{CATALOG_URL}/teams/{team_a_id}/formation")
+                if resp.status_code == 200:
+                    data = resp.json()
+                    left_team["name"] = data.get("team_name", "Team A")
+                    left_team["formation"] = data.get("formation", [])
+                    left_team["players"] = data.get("players", [])
+            except Exception as e:
+                print(f"[Session] Catalog fetch failed for team_a: {e}")
+        if team_b_id:
+            try:
+                resp = await client.get(f"{CATALOG_URL}/teams/{team_b_id}/formation")
+                if resp.status_code == 200:
+                    data = resp.json()
+                    right_team["name"] = data.get("team_name", "Team B")
+                    right_team["formation"] = data.get("formation", [])
+                    right_team["players"] = data.get("players", [])
+            except Exception as e:
+                print(f"[Session] Catalog fetch failed for team_b: {e}")
+
+    # Fallback formation: default 4-3-3 (GameplayFootball native)
+    if not left_team["formation"]:
+        left_team["formation"] = [
+            {"role": "GK", "x": -1.0, "y": 0.0, "controllable": True},
+            {"role": "LB", "x": -0.7, "y": 0.75, "controllable": False},
+            {"role": "CB", "x": -1.0, "y": 0.25, "controllable": False},
+            {"role": "CB", "x": -1.0, "y": -0.25, "controllable": False},
+            {"role": "RB", "x": -0.7, "y": -0.75, "controllable": False},
+            {"role": "CM", "x": 0.0, "y": 0.5, "controllable": True},
+            {"role": "CM", "x": -0.2, "y": 0.0, "controllable": True},
+            {"role": "CM", "x": 0.0, "y": -0.5, "controllable": True},
+            {"role": "LM", "x": 0.6, "y": 0.75, "controllable": True},
+            {"role": "CF", "x": 1.0, "y": 0.0, "controllable": True},
+            {"role": "RM", "x": 0.6, "y": -0.75, "controllable": True},
+        ]
+    if not right_team["formation"]:
+        mirrored = []
+        for entry in left_team["formation"]:
+            mirrored.append({
+                "role": entry["role"],
+                "x": -entry["x"],
+                "y": entry["y"],
+                "controllable": entry.get("controllable", False),
+            })
+        right_team["formation"] = mirrored
+
+    # Fallback players: if catalog has formation but no players, generate generic profiles
+    if not left_team["players"] and left_team["formation"]:
+        left_team["players"] = _generic_players(left_team["formation"])
+    if not right_team["players"] and right_team["formation"]:
+        right_team["players"] = _generic_players(right_team["formation"])
+
+    return {
+        "duration_seconds": duration,
+        "mode": mode,
+        "left_team": left_team,
+        "right_team": right_team,
+    }
+
+
+def _generic_players(formation):
+    """Generate 11 generic player profiles with balanced skills when DB has none."""
+    generic_skills = {
+        "physical_balance": 0.70, "physical_reaction": 0.70, "physical_acceleration": 0.70,
+        "physical_velocity": 0.70, "physical_stamina": 0.70, "physical_agility": 0.70,
+        "physical_shotpower": 0.70,
+        "technical_standingtackle": 0.65, "technical_slidingtackle": 0.60,
+        "technical_ballcontrol": 0.70, "technical_dribble": 0.65,
+        "technical_shortpass": 0.70, "technical_highpass": 0.65, "technical_header": 0.60,
+        "technical_shot": 0.70, "technical_volley": 0.55,
+        "mental_calmness": 0.70, "mental_workrate": 0.70, "mental_resilience": 0.70,
+        "mental_defensivepositioning": 0.65, "mental_offensivepositioning": 0.65,
+        "mental_vision": 0.70,
+    }
+    players = []
+    for i, entry in enumerate(formation):
+        players.append({
+            "name": f"Player {i+1}",
+            "position": entry["role"],
+            "number": i + 1,
+            "skills": generic_skills.copy(),
+        })
+    return players
+
+
+def _write_config_to_disk(room_id: str, match_config: dict) -> str:
+    """Write match config dict to disk, return file path."""
+    config_path = os.path.join(CONFIG_DIR, f"{room_id}.json")
+    os.makedirs(CONFIG_DIR, exist_ok=True)
+    with open(config_path, "w", encoding="utf-8") as f:
+        json.dump(match_config, f, indent=2)
+    print(f"[Session] Match config written to {config_path}")
+    return config_path
 
 
 @app.post("/internal/create-match")
 async def create_match(req: CreateMatchRequest):
     room_id = f"match-{uuid.uuid4()}"
+
+    # Build match config dict from catalog formations (roles, positions, controllable flags)
+    match_config = await _build_match_config(room_id, req.team_a, req.team_b, req.duration, req.mode)
 
     # 1. Create LiveKit room
     await lkapi.room.create_room(
@@ -182,10 +293,10 @@ async def create_match(req: CreateMatchRequest):
     )
 
     # 3. Spawn GF — local subprocess (dev) OR Redis queue (prod VM pool)
-    spawn_mode = os.getenv("GF_SPAWN_MODE", "local")  # "local" or "queue"
-    
+    spawn_mode = os.getenv("GF_SPAWN_MODE", "local")  # "local", "queue" or "mock"
+
     if spawn_mode == "queue":
-        # Publish to Redis queue for GF worker pool (VMs)
+        # Embed full match config in Redis message so VM worker can write it locally
         spawn_request = {
             "room_id": room_id,
             "token": gf_token,
@@ -193,6 +304,10 @@ async def create_match(req: CreateMatchRequest):
             "team_b": req.team_b or "default-b",
             "stadium_id": req.stadium_id or "default-stadium",
             "duration": req.duration,
+            "mode": req.mode,
+            "player_a": req.player_a,
+            "player_b": req.player_b,
+            "match_config": match_config,  # VM worker writes this to disk before spawn
         }
         await redis.lpush("gf.spawn", json.dumps(spawn_request))
         active_matches[room_id] = {"queued": True, "players": [req.player_a, req.player_b], "started_at": datetime.utcnow().isoformat(), "duration": req.duration}
@@ -204,7 +319,6 @@ async def create_match(req: CreateMatchRequest):
         env["LIVEKIT_URL"] = LK_URL
         env["GF_TOKEN"] = gf_token
         env["DURATION"] = str(req.duration)
-        # Ensure PATH is set so python3 can be found
         if not env.get("PATH"):
             env["PATH"] = "/usr/local/bin:/usr/bin:/bin"
         print(f"[Session] Spawning GF simulator for room {room_id}")
@@ -222,18 +336,23 @@ async def create_match(req: CreateMatchRequest):
         except Exception as e:
             print(f"[Session] Failed to spawn GF simulator: {e}")
     else:
-        # Local subprocess (single-node dev, real C++ binary)
+        # Local subprocess (single-node dev): write config to shared volume
+        config_path = _write_config_to_disk(room_id, match_config)
         proc = await asyncio.create_subprocess_exec(
             GF_BINARY_PATH,
             f"--room-id={room_id}",
             f"--team-a={req.team_a or 'default-a'}",
             f"--team-b={req.team_b or 'default-b'}",
             f"--stadium={req.stadium_id or 'default-stadium'}",
+            f"--player-a={req.player_a}",
+            f"--player-b={req.player_b}",
             f"--duration={req.duration}",
+            f"--mode={req.mode}",
             f"--livekit-url={LK_URL}",
             f"--livekit-token={gf_token}",
             f"--stats-url={STATS_SERVICE_URL}",
             f"--redis-url={REDIS_URL}",
+            f"--config-file={config_path}",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )

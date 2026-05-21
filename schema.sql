@@ -20,21 +20,46 @@ CREATE TABLE teams (
     logo_url         TEXT,
     color_primary    VARCHAR(7),
     color_secondary  VARCHAR(7),
-    formation        VARCHAR(20) DEFAULT '4-3-3'
+    formation        VARCHAR(20) DEFAULT '4-3-3',
+    stadium_id       UUID REFERENCES stadiums(id)
 );
 
--- players
+-- players (all 22 skills match GameplayFootball PlayerStat enum)
 CREATE TABLE players (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     team_id     UUID REFERENCES teams(id),
     name        VARCHAR(100) NOT NULL,
     position    VARCHAR(5),
     number      INTEGER,
-    speed       FLOAT DEFAULT 0.75,
-    shooting    FLOAT DEFAULT 0.70,
-    passing     FLOAT DEFAULT 0.72,
-    defense     FLOAT DEFAULT 0.65,
-    stamina     FLOAT DEFAULT 0.80,
+    -- Legacy shortcuts (mapped to GF native stats)
+    speed       FLOAT DEFAULT 0.75,   -- physical_velocity
+    shooting    FLOAT DEFAULT 0.70,   -- technical_shot
+    passing     FLOAT DEFAULT 0.72,   -- technical_shortpass
+    defense     FLOAT DEFAULT 0.65,   -- technical_standingtackle
+    stamina     FLOAT DEFAULT 0.80,   -- physical_stamina
+    -- Full GF PlayerStat skillset (0.0 .. 1.0)
+    physical_balance            FLOAT DEFAULT 0.70,
+    physical_reaction           FLOAT DEFAULT 0.70,
+    physical_acceleration       FLOAT DEFAULT 0.70,
+    physical_velocity           FLOAT DEFAULT 0.75,
+    physical_stamina            FLOAT DEFAULT 0.80,
+    physical_agility            FLOAT DEFAULT 0.70,
+    physical_shotpower          FLOAT DEFAULT 0.70,
+    technical_standingtackle    FLOAT DEFAULT 0.65,
+    technical_slidingtackle     FLOAT DEFAULT 0.60,
+    technical_ballcontrol       FLOAT DEFAULT 0.72,
+    technical_dribble           FLOAT DEFAULT 0.68,
+    technical_shortpass         FLOAT DEFAULT 0.72,
+    technical_highpass          FLOAT DEFAULT 0.65,
+    technical_header            FLOAT DEFAULT 0.60,
+    technical_shot              FLOAT DEFAULT 0.70,
+    technical_volley            FLOAT DEFAULT 0.55,
+    mental_calmness             FLOAT DEFAULT 0.70,
+    mental_workrate             FLOAT DEFAULT 0.70,
+    mental_resilience           FLOAT DEFAULT 0.70,
+    mental_defensivepositioning FLOAT DEFAULT 0.65,
+    mental_offensivepositioning FLOAT DEFAULT 0.65,
+    mental_vision               FLOAT DEFAULT 0.70,
     model_ref   TEXT
 );
 
