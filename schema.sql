@@ -12,6 +12,17 @@ CREATE TABLE users (
     created_at    TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- stadiums
+CREATE TABLE stadiums (
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name           VARCHAR(200) NOT NULL,
+    city           VARCHAR(100),
+    capacity       INTEGER,
+    model_3d_url   TEXT,
+    ar_marker_ref  TEXT,
+    pitch_texture  TEXT
+);
+
 -- teams
 CREATE TABLE teams (
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -61,17 +72,6 @@ CREATE TABLE players (
     mental_offensivepositioning FLOAT DEFAULT 0.65,
     mental_vision               FLOAT DEFAULT 0.70,
     model_ref   TEXT
-);
-
--- stadiums
-CREATE TABLE stadiums (
-    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name           VARCHAR(200) NOT NULL,
-    city           VARCHAR(100),
-    capacity       INTEGER,
-    model_3d_url   TEXT,
-    ar_marker_ref  TEXT,
-    pitch_texture  TEXT
 );
 
 -- matches
