@@ -100,7 +100,7 @@ async def team_formation(team_id: str):
     formations = _load_formations()
     async with async_session() as session:
         row = await session.execute(
-            text("SELECT name, formation FROM teams WHERE id=:tid"),
+            text("SELECT name, short_name, color_primary, color_secondary, color_rgb1, color_rgb2, league, kit_texture_url, formation FROM teams WHERE id=:tid"),
             {"tid": team_id},
         )
         r = row.mappings().first()
@@ -108,6 +108,15 @@ async def team_formation(team_id: str):
             raise HTTPException(status_code=404, detail="Team not found")
         formation_key = r["formation"] or "default"
         team_name = r["name"]
+        team_meta = {
+            "short_name": r["short_name"],
+            "color_primary": r["color_primary"],
+            "color_secondary": r["color_secondary"],
+            "color_rgb1": r["color_rgb1"],
+            "color_rgb2": r["color_rgb2"],
+            "league": r["league"],
+            "kit_texture_url": r["kit_texture_url"],
+        }
 
         # Fetch all 11 players with full skill profiles
         cols = ", ".join(SKILL_COLS)
@@ -129,6 +138,7 @@ async def team_formation(team_id: str):
     data = formations.get(formation_key, formations["default"]).copy()
     data["team_name"] = team_name
     data["team_id"] = team_id
+    data.update(team_meta)
     data["players"] = players
     await redis.setex(key, CACHE_TTL, json.dumps(data))
     return data

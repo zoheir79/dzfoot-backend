@@ -161,6 +161,13 @@ async def _build_match_config(room_id: str, team_a_id: Optional[str], team_b_id:
                     left_team["name"] = data.get("team_name", "Team A")
                     left_team["formation"] = data.get("formation", [])
                     left_team["players"] = data.get("players", [])
+                    left_team["short_name"] = data.get("short_name")
+                    left_team["color_primary"] = data.get("color_primary")
+                    left_team["color_secondary"] = data.get("color_secondary")
+                    left_team["color_rgb1"] = data.get("color_rgb1")
+                    left_team["color_rgb2"] = data.get("color_rgb2")
+                    left_team["kit_texture_url"] = data.get("kit_texture_url")
+                    left_team["league"] = data.get("league")
             except Exception as e:
                 print(f"[Session] Catalog fetch failed for team_a: {e}")
         if team_b_id:
@@ -171,6 +178,13 @@ async def _build_match_config(room_id: str, team_a_id: Optional[str], team_b_id:
                     right_team["name"] = data.get("team_name", "Team B")
                     right_team["formation"] = data.get("formation", [])
                     right_team["players"] = data.get("players", [])
+                    right_team["short_name"] = data.get("short_name")
+                    right_team["color_primary"] = data.get("color_primary")
+                    right_team["color_secondary"] = data.get("color_secondary")
+                    right_team["color_rgb1"] = data.get("color_rgb1")
+                    right_team["color_rgb2"] = data.get("color_rgb2")
+                    right_team["kit_texture_url"] = data.get("kit_texture_url")
+                    right_team["league"] = data.get("league")
             except Exception as e:
                 print(f"[Session] Catalog fetch failed for team_b: {e}")
 

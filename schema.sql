@@ -29,8 +29,13 @@ CREATE TABLE teams (
     name             VARCHAR(100) NOT NULL,
     country          VARCHAR(100),
     logo_url         TEXT,
+    kit_texture_url  TEXT,
+    short_name       VARCHAR(10),
     color_primary    VARCHAR(7),
     color_secondary  VARCHAR(7),
+    color_rgb1       VARCHAR(20),   -- e.g. "220,0,0" for GF Vector3
+    color_rgb2       VARCHAR(20),
+    league           VARCHAR(50) DEFAULT 'Ligue 1 Mobilis',
     formation        VARCHAR(20) DEFAULT '4-3-3',
     stadium_id       UUID REFERENCES stadiums(id)
 );

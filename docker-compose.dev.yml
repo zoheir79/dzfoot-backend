@@ -64,7 +64,7 @@ services:
       LIVEKIT_URL: https://orch.adexgenie.ai
       LIVEKIT_API_KEY: APIAVkwUwQPYRf4
       LIVEKIT_API_SECRET: WiKnaaaPUfvcG4Thviw6w2XPNFWvBbJuS9sNjfzhgS8
-      GF_SPAWN_MODE: mock
+      GF_SPAWN_MODE: queue
       GF_BINARY_PATH: ${GF_BINARY_PATH}
       STATS_SERVICE_URL: http://stats:8000
       CATALOG_URL: http://catalog:8000
@@ -132,6 +132,23 @@ services:
       redis:
         condition: service_healthy
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  gf-worker:
+    image: dzfoot-gf-server:prod
+    volumes:
+      - //var/run/docker.sock:/var/run/docker.sock
+      - ./gf_worker_docker.py:/app/gf_worker_docker.py:ro
+    environment:
+      REDIS_URL: redis://redis:6379
+      STATS_URL: http://stats:8000
+      LIVEKIT_URL: https://orch.adexgenie.ai
+      GF_IMAGE: dzfoot-gf-server:prod
+      GF_NETWORK: dzfoot-backend_default
+    entrypoint: ["/bin/bash", "-c", "apt-get update -qq && apt-get install -y -qq python3-pip && pip3 install redis docker -q && python3 /app/gf_worker_docker.py"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
 
   nginx:
     image: nginx:alpine
