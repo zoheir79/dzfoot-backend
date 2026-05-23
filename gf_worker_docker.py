@@ -62,18 +62,11 @@ while running:
         ]
         if player_a: cmd.append(f"--player-a={player_a}")
         if player_b: cmd.append(f"--player-b={player_b}")
-        volumes = []
-        if match_config and match_config not in ("", "null", None):
-            config_path = f"/tmp/gf_{room_id}.json"
-            with open(config_path, "w") as f:
-                f.write(match_config if isinstance(match_config, str) else json.dumps(match_config))
-            volumes.append(f"{config_path}:/tmp/match_config.json:ro")
-            cmd.append("--config-file=/tmp/match_config.json")
         env = {"LIVEKIT_URL": LIVEKIT_URL, "LIVEKIT_TOKEN": token,
                "REDIS_URL": REDIS_URL, "STATS_URL": STATS_URL}
         container = client.containers.run(
             image=GF_IMAGE, command=cmd, name=f"gf-{room_id}",
-            network=GF_NETWORK, environment=env, volumes=volumes,
+            network=GF_NETWORK, environment=env,
             detach=True, remove=True)
         print(f"[GF Docker Worker {WORKER_ID}] Container {container.id[:12]} launched")
         r.publish("gf.ready", room_id)
