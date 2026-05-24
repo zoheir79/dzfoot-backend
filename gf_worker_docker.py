@@ -62,8 +62,14 @@ while running:
         ]
         if player_a: cmd.append(f"--player-a={player_a}")
         if player_b: cmd.append(f"--player-b={player_b}")
-        env = {"LIVEKIT_URL": LIVEKIT_URL, "LIVEKIT_TOKEN": token,
-               "REDIS_URL": REDIS_URL, "STATS_URL": STATS_URL}
+        env = {
+            "LIVEKIT_URL": LIVEKIT_URL,
+            "LIVEKIT_TOKEN": token,
+            "REDIS_URL": REDIS_URL,
+            "STATS_URL": STATS_URL
+        }
+        if match_config:
+            env["CONFIG_JSON"] = json.dumps(match_config)
         container = client.containers.run(
             image=GF_IMAGE, command=cmd, name=f"gf-{room_id}",
             network=GF_NETWORK, environment=env,

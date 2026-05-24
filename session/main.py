@@ -11,6 +11,8 @@ from pydantic import BaseModel
 import redis.asyncio as aioredis
 import httpx
 from livekit.api import LiveKitAPI, CreateRoomRequest, AccessToken, VideoGrants
+from livekit.api import SendDataRequest
+from livekit.rtc import Room, DataPacketKind
 
 app = FastAPI(title="DZFoot Session Service")
 
@@ -41,6 +43,12 @@ async def startup():
     asyncio.create_task(_pubsub_listener("gf.ready", _handle_gf_ready))
     asyncio.create_task(_pubsub_listener("gf.crashed", _handle_gf_crashed))
     asyncio.create_task(_pubsub_listener("gf.finished", _handle_gf_finished))
+    # Start GF -> LiveKit relay (binary pubsub for gamestate/event/setup)
+    asyncio.create_task(_binary_pubsub_relay("gf.gamestate", "gs", DataPacketKind.KIND_LOSSY))
+    asyncio.create_task(_binary_pubsub_relay("gf.event", "ev", DataPacketKind.KIND_RELIABLE))
+    asyncio.create_task(_binary_pubsub_relay("gf.setup", "setup", DataPacketKind.KIND_RELIABLE))
+    # Start LiveKit -> GF input relay (bot joins rooms, forwards inputs to Redis)
+    asyncio.create_task(_input_relay_bot())
     asyncio.create_task(check_worker_health())
     asyncio.create_task(check_match_timeouts())
 
@@ -67,6 +75,108 @@ async def _pubsub_listener(channel: str, handler):
                 await handler(message["data"])
     finally:
         await ps.close()
+
+
+async def _binary_pubsub_relay(redis_channel: str, lk_topic: str, kind):
+    """Relay binary data from Redis pubsub to LiveKit room via send_data.
+    Message format: first 36 bytes = room_id (padded), rest = binary payload.
+    We use a prefix key in Redis: gf:<room_id>:<topic> for routing.
+    Actually, we publish to a single channel and encode room_id in the message.
+    Format: 36-byte room_id + binary payload."""
+    ps = await aioredis.from_url(REDIS_URL, decode_responses=False)
+    pubsub = ps.pubsub()
+    await pubsub.subscribe(redis_channel)
+    print(f"[Session] Relay started: Redis:{redis_channel} -> LiveKit:{lk_topic}", flush=True)
+    try:
+        async for message in pubsub.listen():
+            if message["type"] != "message":
+                continue
+            data = message["data"]
+            if len(data) < 37:
+                continue
+            # First 36 bytes: room_id (UUID format: match-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+            room_id = data[:36].decode("utf-8", errors="replace").rstrip("\x00")
+            payload = data[36:]
+            try:
+                req = SendDataRequest(
+                    room=room_id,
+                    data=payload,
+                    kind=kind,
+                    topic=lk_topic,
+                )
+                await lkapi.room.send_data(req)
+            except Exception as e:
+                print(f"[Relay {redis_channel}] send_data error for room {room_id}: {e}", flush=True)
+    finally:
+        await ps.close()
+
+
+async def _input_relay_bot():
+    """Join rooms as a bot to relay player inputs from LiveKit to Redis.
+    Listens for new rooms via Redis keyspace notifications or polls active_matches."""
+    # Track which rooms we've already joined
+    joined_rooms = set()
+    while True:
+        await asyncio.sleep(2)
+        for room_id in list(active_matches.keys()):
+            if room_id in joined_rooms:
+                continue
+            joined_rooms.add(room_id)
+            asyncio.create_task(_bot_relay_for_room(room_id))
+
+
+async def _bot_relay_for_room(room_id: str):
+    """Join a LiveKit room as a bot to relay player inputs to Redis gf.input channel."""
+    # Generate a bot token for this room
+    bot_token = (
+        AccessToken(LK_KEY, LK_SECRET)
+        .with_grants(
+            VideoGrants(
+                room_join=True,
+                room=room_id,
+                can_publish=False,
+                can_subscribe=True,
+                can_publish_data=False,
+            )
+        )
+        .with_identity(f"bot-{room_id}")
+        .to_jwt()
+    )
+
+    room = Room()
+    try:
+        @room.on("data_received")
+        def on_data(data_packet):
+            try:
+                payload = getattr(data_packet, "data", None) or getattr(data_packet, "payload", None)
+                topic = getattr(data_packet, "topic", "")
+                if topic == "in" and payload is not None:
+                    # Forward input to Redis as binary
+                    asyncio.create_task(_forward_input_to_redis(room_id, bytes(payload)))
+            except Exception as e:
+                print(f"[Bot {room_id}] data_received error: {e}", flush=True)
+
+        await room.connect(LK_URL, bot_token)
+        print(f"[Bot {room_id}] Connected to room for input relay")
+
+        # Keep the bot alive until the room is gone
+        while room_id in active_matches:
+            await asyncio.sleep(5)
+    except Exception as e:
+        print(f"[Bot {room_id}] Error: {e}", flush=True)
+    finally:
+        await room.disconnect()
+        print(f"[Bot {room_id}] Disconnected")
+
+
+async def _forward_input_to_redis(room_id: str, payload: bytes):
+    """Forward binary input data to Redis gf.input channel with room_id prefix."""
+    try:
+        # Prefix room_id (36 bytes padded) + binary payload
+        room_prefix = room_id.encode("utf-8").ljust(36, b"\x00")[:36]
+        await redis.publish("gf.input", room_prefix + payload)
+    except Exception as e:
+        print(f"[Session] Failed to forward input to Redis: {e}", flush=True)
 
 
 async def _handle_gf_ready(room_id):
@@ -362,8 +472,6 @@ async def create_match(req: CreateMatchRequest):
             f"--player-b={req.player_b}",
             f"--duration={req.duration}",
             f"--mode={req.mode}",
-            f"--livekit-url={LK_URL}",
-            f"--livekit-token={gf_token}",
             f"--stats-url={STATS_SERVICE_URL}",
             f"--redis-url={REDIS_URL}",
             f"--config-file={config_path}",
