@@ -11,8 +11,20 @@ from pydantic import BaseModel
 import redis.asyncio as aioredis
 import httpx
 from livekit.api import LiveKitAPI, CreateRoomRequest, AccessToken, VideoGrants
-from livekit.api import SendDataRequest
-from livekit.rtc import Room, DataPacketKind
+try:
+    from livekit.api import SendDataRequest
+except ImportError:
+    SendDataRequest = None
+    print("[Session] WARNING: SendDataRequest not available in livekit.api", flush=True)
+try:
+    from livekit.rtc import Room, DataPacketKind
+except ImportError as e:
+    print(f"[Session] WARNING: livekit.rtc import failed: {e}", flush=True)
+    Room = None
+    class _DataPacketKind:
+        KIND_LOSSY = 0
+        KIND_RELIABLE = 1
+    DataPacketKind = _DataPacketKind()
 
 app = FastAPI(title="DZFoot Session Service")
 
@@ -32,6 +44,7 @@ os.makedirs(CONFIG_DIR, exist_ok=True)
 redis: Optional[aioredis.Redis] = None
 lkapi: Optional[LiveKitAPI] = None
 active_matches: dict = {}
+_background_tasks: list = []  # Strong references to prevent GC
 
 
 @app.on_event("startup")
@@ -40,17 +53,19 @@ async def startup():
     redis = await aioredis.from_url(REDIS_URL, decode_responses=True)
     lkapi = LiveKitAPI(url=LK_URL, api_key=LK_KEY, api_secret=LK_SECRET)
     # Start background listeners (each with dedicated Redis connection)
-    asyncio.create_task(_pubsub_listener("gf.ready", _handle_gf_ready))
-    asyncio.create_task(_pubsub_listener("gf.crashed", _handle_gf_crashed))
-    asyncio.create_task(_pubsub_listener("gf.finished", _handle_gf_finished))
+    # Store strong references so Python 3.12+ doesn't garbage-collect them
+    _background_tasks.append(asyncio.create_task(_pubsub_listener("gf.ready", _handle_gf_ready)))
+    _background_tasks.append(asyncio.create_task(_pubsub_listener("gf.crashed", _handle_gf_crashed)))
+    _background_tasks.append(asyncio.create_task(_pubsub_listener("gf.finished", _handle_gf_finished)))
     # Start GF -> LiveKit relay (binary pubsub for gamestate/event/setup)
-    asyncio.create_task(_binary_pubsub_relay("gf.gamestate", "gs", DataPacketKind.KIND_LOSSY))
-    asyncio.create_task(_binary_pubsub_relay("gf.event", "ev", DataPacketKind.KIND_RELIABLE))
-    asyncio.create_task(_binary_pubsub_relay("gf.setup", "setup", DataPacketKind.KIND_RELIABLE))
+    _background_tasks.append(asyncio.create_task(_binary_pubsub_relay("gf.gamestate", "gs", DataPacketKind.KIND_LOSSY)))
+    _background_tasks.append(asyncio.create_task(_binary_pubsub_relay("gf.event", "ev", DataPacketKind.KIND_RELIABLE)))
+    _background_tasks.append(asyncio.create_task(_binary_pubsub_relay("gf.setup", "setup", DataPacketKind.KIND_RELIABLE)))
     # Start LiveKit -> GF input relay (bot joins rooms, forwards inputs to Redis)
-    asyncio.create_task(_input_relay_bot())
-    asyncio.create_task(check_worker_health())
-    asyncio.create_task(check_match_timeouts())
+    _background_tasks.append(asyncio.create_task(_input_relay_bot()))
+    _background_tasks.append(asyncio.create_task(check_worker_health()))
+    _background_tasks.append(asyncio.create_task(check_match_timeouts()))
+    print(f"[Session] Started {len(_background_tasks)} background tasks", flush=True)
 
 
 @app.get("/health")
@@ -79,36 +94,55 @@ async def _pubsub_listener(channel: str, handler):
 
 async def _binary_pubsub_relay(redis_channel: str, lk_topic: str, kind):
     """Relay binary data from Redis pubsub to LiveKit room via send_data.
-    Message format: first 36 bytes = room_id (padded), rest = binary payload.
-    We use a prefix key in Redis: gf:<room_id>:<topic> for routing.
-    Actually, we publish to a single channel and encode room_id in the message.
-    Format: 36-byte room_id + binary payload."""
-    ps = await aioredis.from_url(REDIS_URL, decode_responses=False)
-    pubsub = ps.pubsub()
-    await pubsub.subscribe(redis_channel)
-    print(f"[Session] Relay started: Redis:{redis_channel} -> LiveKit:{lk_topic}", flush=True)
-    try:
-        async for message in pubsub.listen():
-            if message["type"] != "message":
-                continue
-            data = message["data"]
-            if len(data) < 37:
-                continue
-            # First 36 bytes: room_id (UUID format: match-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
-            room_id = data[:36].decode("utf-8", errors="replace").rstrip("\x00")
-            payload = data[36:]
+    Message format: first 36 bytes = room_id (padded), rest = binary payload."""
+    while True:
+        try:
+            print(f"[Session] Starting relay {redis_channel} -> {lk_topic}...", flush=True)
+            ps = await aioredis.from_url(REDIS_URL, decode_responses=False)
+            pubsub = ps.pubsub()
+            await pubsub.subscribe(redis_channel)
+            print(f"[Session] Relay started: Redis:{redis_channel} -> LiveKit:{lk_topic}", flush=True)
             try:
-                req = SendDataRequest(
-                    room=room_id,
-                    data=payload,
-                    kind=kind,
-                    topic=lk_topic,
-                )
-                await lkapi.room.send_data(req)
-            except Exception as e:
-                print(f"[Relay {redis_channel}] send_data error for room {room_id}: {e}", flush=True)
-    finally:
-        await ps.close()
+                async for message in pubsub.listen():
+                    if message["type"] != "message":
+                        continue
+                    data = message["data"]
+                    if len(data) < 37:
+                        continue
+                    room_id = data[:36].decode("utf-8", errors="replace").rstrip("\x00")
+                    payload = data[36:]
+                    # GF server truncates to 36 bytes but real room_id is 42 chars
+                    # ("match-" + 36-char UUID). Look up full room_id by prefix in active_matches.
+                    if room_id not in active_matches:
+                        full_room_id = None
+                        for known_room in active_matches.keys():
+                            if known_room.startswith(room_id):
+                                full_room_id = known_room
+                                break
+                        if full_room_id:
+                            room_id = full_room_id
+                        else:
+                            # Orphan match (not in active_matches) — skip silently
+                            continue
+                    try:
+                        if SendDataRequest is None:
+                            print(f"[Relay {redis_channel}] SendDataRequest is None — cannot forward", flush=True)
+                            continue
+                        req = SendDataRequest(
+                            room=room_id,
+                            data=payload,
+                            kind=kind,
+                            topic=lk_topic,
+                        )
+                        await lkapi.room.send_data(req)
+                    except Exception as e:
+                        print(f"[Relay {redis_channel}] send_data error for room {room_id}: {e}", flush=True)
+            finally:
+                await ps.close()
+        except Exception as e:
+            import traceback
+            print(f"[Relay {redis_channel}] FATAL error: {e}\n{traceback.format_exc()}", flush=True)
+            await asyncio.sleep(5)  # retry after 5 seconds
 
 
 async def _input_relay_bot():
@@ -156,6 +190,18 @@ async def _bot_relay_for_room(room_id: str):
             except Exception as e:
                 print(f"[Bot {room_id}] data_received error: {e}", flush=True)
 
+        @room.on("participant_disconnected")
+        def on_participant_disconnected(participant):
+            try:
+                identity = getattr(participant, "identity", "")
+                # Ignore disconnects from gf-server itself or other bots
+                if identity.startswith("bot-") or identity == "gf-server":
+                    return
+                print(f"[Bot {room_id}] Real participant '{identity}' disconnected — cleaning up match", flush=True)
+                asyncio.create_task(_cleanup_orphan_match(room_id))
+            except Exception as e:
+                print(f"[Bot {room_id}] participant_disconnected error: {e}", flush=True)
+
         await room.connect(LK_URL, bot_token)
         print(f"[Bot {room_id}] Connected to room for input relay")
 
@@ -167,6 +213,16 @@ async def _bot_relay_for_room(room_id: str):
     finally:
         await room.disconnect()
         print(f"[Bot {room_id}] Disconnected")
+
+
+async def _cleanup_orphan_match(room_id: str):
+    """Kill GF container for an orphan match where the player has disconnected."""
+    await asyncio.sleep(10)  # Grace period for reconnect
+    if room_id in active_matches:
+        print(f"[Session] Cleaning up orphan match {room_id} (no player after 10s)", flush=True)
+        await redis.publish("gf.crashed", room_id)
+        active_matches.pop(room_id, None)
+        await redis.delete(f"room:{room_id}")
 
 
 async def _forward_input_to_redis(room_id: str, payload: bytes):

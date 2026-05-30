@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """DZFoot GF Worker - Docker mode via docker-py"""
-import os, sys, json, time, signal
+import os, sys, json, time, signal, threading
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 STATS_URL = os.getenv("STATS_URL", "http://stats:8000")
@@ -32,6 +32,36 @@ def shutdown(sig, frame):
 
 signal.signal(signal.SIGINT, shutdown)
 signal.signal(signal.SIGTERM, shutdown)
+
+
+def cleanup_listener():
+    """Listen to gf.crashed / gf.finished events on Redis and kill matching containers."""
+    cleanup_r = redis.from_url(REDIS_URL)
+    pubsub = cleanup_r.pubsub()
+    pubsub.subscribe("gf.crashed", "gf.finished")
+    print(f"[GF Docker Worker {WORKER_ID}] Cleanup listener started", flush=True)
+    for message in pubsub.listen():
+        if not running:
+            break
+        if message["type"] != "message":
+            continue
+        try:
+            room_id = message["data"].decode("utf-8") if isinstance(message["data"], bytes) else message["data"]
+            container_name = f"gf-{room_id}"
+            try:
+                container = client.containers.get(container_name)
+                container.stop(timeout=2)
+                print(f"[GF Docker Worker {WORKER_ID}] Stopped container {container_name}", flush=True)
+            except docker.errors.NotFound:
+                pass  # Already gone
+            except Exception as e:
+                print(f"[GF Docker Worker {WORKER_ID}] Stop error for {container_name}: {e}", flush=True)
+        except Exception as e:
+            print(f"[GF Docker Worker {WORKER_ID}] Cleanup listener error: {e}", flush=True)
+
+
+# Start cleanup listener in background thread
+threading.Thread(target=cleanup_listener, daemon=True).start()
 
 while running:
     try:
@@ -68,11 +98,19 @@ while running:
             "REDIS_URL": REDIS_URL,
             "STATS_URL": STATS_URL
         }
+        # Write match_config to a host file and mount it as volume into container
+        volumes = {}
         if match_config:
-            env["CONFIG_JSON"] = json.dumps(match_config)
+            config_host_path = f"/tmp/gf_{room_id}.json"
+            with open(config_host_path, "w") as f:
+                json.dump(match_config, f)
+            volumes[config_host_path] = {"bind": "/tmp/match_config.json", "mode": "ro"}
+            cmd.append("--config-file=/tmp/match_config.json")
+            print(f"[GF Docker Worker {WORKER_ID}] Match config written to {config_host_path}")
+
         container = client.containers.run(
             image=GF_IMAGE, command=cmd, name=f"gf-{room_id}",
-            network=GF_NETWORK, environment=env,
+            network=GF_NETWORK, environment=env, volumes=volumes,
             detach=True, remove=True)
         print(f"[GF Docker Worker {WORKER_ID}] Container {container.id[:12]} launched")
         r.publish("gf.ready", room_id)
