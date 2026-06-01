@@ -59,6 +59,7 @@ async def startup():
     _background_tasks.append(asyncio.create_task(_pubsub_listener("gf.finished", _handle_gf_finished)))
     # Start GF -> LiveKit relay (binary pubsub for gamestate/event/setup)
     _background_tasks.append(asyncio.create_task(_binary_pubsub_relay("gf.gamestate", "gs", DataPacketKind.KIND_LOSSY)))
+    _background_tasks.append(asyncio.create_task(_binary_pubsub_relay("gf.tactical", "tac", DataPacketKind.KIND_LOSSY)))
     _background_tasks.append(asyncio.create_task(_binary_pubsub_relay("gf.event", "ev", DataPacketKind.KIND_RELIABLE)))
     _background_tasks.append(asyncio.create_task(_binary_pubsub_relay("gf.setup", "setup", DataPacketKind.KIND_RELIABLE)))
     # Start LiveKit -> GF input relay (bot joins rooms, forwards inputs to Redis)
