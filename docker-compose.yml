@@ -28,7 +28,7 @@ services:
       retries: 5
 
   account:
-    build: ./account
+    image: djdreamer79/dzfoot-backend-account:latest
     ports:
       - "8001:8000"
     environment:
@@ -45,7 +45,7 @@ services:
         condition: service_healthy
 
   session:
-    build: ./session
+    image: djdreamer79/dzfoot-backend-session:latest
     ports:
       - "8002:8000"
     environment:
@@ -66,7 +66,7 @@ services:
         condition: service_healthy
 
   matchmaking:
-    build: ./matchmaking
+    image: djdreamer79/dzfoot-backend-matchmaking:latest
     ports:
       - "8003:8000"
     environment:
@@ -78,7 +78,7 @@ services:
         condition: service_healthy
 
   stats:
-    build: ./stats
+    image: djdreamer79/dzfoot-backend-stats:latest
     ports:
       - "8004:8000"
     environment:
@@ -91,7 +91,7 @@ services:
         condition: service_healthy
 
   catalog:
-    build: ./catalog
+    image: djdreamer79/dzfoot-backend-catalog:latest
     ports:
       - "8005:8000"
     environment:
