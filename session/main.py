@@ -434,8 +434,13 @@ def _write_config_to_disk(room_id: str, match_config: dict) -> str:
 async def create_match(req: CreateMatchRequest):
     room_id = f"match-{uuid.uuid4()}"
 
+    # Force player vs AI mode (ignore client request for ai_vs_ai)
+    mode = req.mode if req.mode in ("1v1", "vs_ai") else "vs_ai"
+    if req.mode == "ai_vs_ai":
+        print(f"[Session] Ignoring client ai_vs_ai request, forcing vs_ai mode")
+
     # Build match config dict from catalog formations (roles, positions, controllable flags)
-    match_config = await _build_match_config(room_id, req.team_a, req.team_b, req.duration, req.mode)
+    match_config = await _build_match_config(room_id, req.team_a, req.team_b, req.duration, mode)
 
     # 1. Create LiveKit room
     await lkapi.room.create_room(
@@ -485,7 +490,7 @@ async def create_match(req: CreateMatchRequest):
             "team_b": req.team_b or "default-b",
             "stadium_id": req.stadium_id or "default-stadium",
             "duration": req.duration,
-            "mode": req.mode,
+            "mode": mode,
             "player_a": req.player_a,
             "player_b": req.player_b,
             "match_config": match_config,  # VM worker writes this to disk before spawn
@@ -528,7 +533,7 @@ async def create_match(req: CreateMatchRequest):
             f"--player-a={req.player_a}",
             f"--player-b={req.player_b}",
             f"--duration={req.duration}",
-            f"--mode={req.mode}",
+            f"--mode={mode}",
             f"--stats-url={STATS_SERVICE_URL}",
             f"--redis-url={REDIS_URL}",
             f"--config-file={config_path}",
