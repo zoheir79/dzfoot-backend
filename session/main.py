@@ -314,6 +314,60 @@ class CreateMatchRequest(BaseModel):
     mode: Optional[str] = "vs_ai"  # "1v1" or "vs_ai"
 
 
+def _generate_procedural_avatar(name: str, index: int, team_id: int):
+    """Generate a deterministic and realistic DZ-themed player avatar metadata based on player name."""
+    import hashlib
+    h = int(hashlib.md5(f"{name}_{index}_{team_id}".encode("utf-8")).hexdigest(), 16)
+    
+    # 1. Skin tone (0..6, mostly olive/brown since it's DZ Foot Algerian League)
+    # 0=fair, 1=light, 2=medium, 3=olive, 4=dark olive, 5=brown, 6=black
+    skin_color = h % 7
+    if (h % 10) < 6: 
+        skin_color = 3 # force more olive/brown tones for local Algerian players
+    
+    # 2. Hair styles from the 6 export options
+    hair_styles = ["short", "shaved", "fade", "curly", "long", "afro"]
+    hair_style = hair_styles[(h >> 2) % len(hair_styles)]
+    
+    # 3. Hair colors from the 8 options (dominant black/dark_brown)
+    hair_colors = ["black", "dark_brown", "brown", "blonde", "grey", "chestnut", "auburn", "white"]
+    if (h % 10) < 8:
+        hair_color = "black" if (h % 2 == 0) else "dark_brown"
+    else:
+        hair_color = hair_colors[(h >> 4) % len(hair_colors)]
+        
+    # 4. Height (1.72m to 1.93m)
+    is_gk = (index == 0)
+    base_height = 1.86 if is_gk else 1.78
+    height = round(base_height + ((h >> 6) % 15 - 7) * 0.015, 2)
+    
+    # 5. Body type (0=thin, 1=average, 2=muscular, 3=heavy)
+    body_type = 1 # average dominant
+    if (h % 10) == 0:
+        body_type = 0 # thin
+    elif (h % 10) in (8, 9):
+        body_type = 2 # muscular
+        
+    # 6. Beard style (0=none, 1=stubble, 2=short, 3=full)
+    beard_style = (h >> 8) % 4
+    
+    # 7. Eye color (0=brown, 1=blue, 2=green, 3=hazel, 4=grey)
+    if (h % 10) < 8:
+        eye_color = 0 # brown dominant
+    else:
+        eye_color = (h >> 10) % 5
+        
+    return {
+        "skin_color": skin_color,
+        "hair_style": hair_style,
+        "hair_color": hair_color,
+        "height": height,
+        "body_type": body_type,
+        "beard_style": beard_style,
+        "eye_color": eye_color
+    }
+
+
 async def _build_match_config(room_id: str, team_a_id: Optional[str], team_b_id: Optional[str], duration: int, mode: str) -> dict:
     """Fetch formations + full player rosters with 22 skills from Catalog."""
     left_team = {"name": "Team A", "formation": [], "players": []}
@@ -387,6 +441,16 @@ async def _build_match_config(room_id: str, team_a_id: Optional[str], team_b_id:
     if not right_team["players"] and right_team["formation"]:
         right_team["players"] = _generic_players(right_team["formation"])
 
+    # Enrich both teams with procedural avatar metadata (only if catalog didn't provide them)
+    for i, p in enumerate(left_team["players"]):
+        if "skin_color" not in p:
+            avatar = _generate_procedural_avatar(p["name"], i, 0)
+            p.update(avatar)
+    for i, p in enumerate(right_team["players"]):
+        if "skin_color" not in p:
+            avatar = _generate_procedural_avatar(p["name"], i, 1)
+            p.update(avatar)
+
     return {
         "duration_seconds": duration,
         "mode": mode,
@@ -434,10 +498,10 @@ def _write_config_to_disk(room_id: str, match_config: dict) -> str:
 async def create_match(req: CreateMatchRequest):
     room_id = f"match-{uuid.uuid4()}"
 
-    # Force player vs AI mode (ignore client request for ai_vs_ai)
-    mode = req.mode if req.mode in ("1v1", "vs_ai") else "vs_ai"
+    # Validate mode; accept 1v1, vs_ai, and ai_vs_ai
+    mode = req.mode if req.mode in ("1v1", "vs_ai", "ai_vs_ai") else "vs_ai"
     if req.mode == "ai_vs_ai":
-        print(f"[Session] Ignoring client ai_vs_ai request, forcing vs_ai mode")
+        print(f"[Session] ai_vs_ai mode requested — bot vs bot, no human player")
 
     # Build match config dict from catalog formations (roles, positions, controllable flags)
     match_config = await _build_match_config(room_id, req.team_a, req.team_b, req.duration, mode)

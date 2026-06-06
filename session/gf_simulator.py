@@ -24,11 +24,18 @@ GF_TOKEN = os.getenv("GF_TOKEN", "")
 DURATION = int(os.getenv("DURATION", "300"))  # 5 min default
 TICK_RATE = 30  # Hz (30Hz = envoi toutes les 33ms)
 
-# --- Struct formats (must match C++ GameBridge.h exactly) ---
-PLAYER_FMT = "<3f3ffBB2x"      # 32 bytes
-BALL_FMT = "<3f3f"              # 24 bytes
-GAME_FMT = "<" + 22 * PLAYER_FMT[1:] + BALL_FMT[1:] + "2ifB3xI"  # 748 bytes
-EVENT_FMT = "<3B1x3fI2i"        # 28 bytes
+# --- Struct formats (must match C++ DZFootProtocol.h exactly) ---
+# NetworkPlayerState: pos[3] + vel[3] + dir[3] + rotY + anim + team + role + flags + tiredFactor = 48 bytes
+PLAYER_FMT = "<3f3f3fBBBBf"
+# NetworkBallState: pos[3] + vel[3] + rot[3] + ownedTeam(int8) + ownedPlayer(int8) + pad[2] = 40 bytes
+BALL_FMT = "<3f3f3fbb2x"
+# NetworkOfficialState: pos[3] + dir[3] + rotY + anim + team + role + flags = 32 bytes
+OFFICIAL_FMT = "<3f3ffBBBB"
+# GameStatePacket: header(12) + tick(4) + timestampUs(8) + gameMode(1) + gameFlags(1) + score[2](2) + timer(4) + ball(40) + 22*players(48*22)
+# Header is packed separately in send() so GAME_FMT is just the body after header
+BODY_FMT = "IQBB2Bf" + BALL_FMT[1:] + 22 * PLAYER_FMT[1:]
+# MatchEventPacket: header(12) + eventType(1) + team(1) + playerIdx(1) + extra(1) + pos[3](12) + tick(4) + score[2](2) + pad[2]
+EVENT_FMT = "<IHHHH" + "BBBB" + "3f" + "I" + "2B" + "2x"
 
 # Pitch bounds (half-size)
 PITCH_X = 5.5   # -5.5 to +5.5
@@ -271,39 +278,71 @@ class GFSimulator:
         self.ball_vel = [0.0, 0.0, 0.0]
 
     def pack_game_state(self):
-        """Pack GameState into 748 bytes matching C++ struct"""
+        """Pack GameState into 1224 bytes matching C++ DZFootProtocol.h"""
         data = bytearray()
 
-        # 22 players
+        # Packet header: magic=0x54465A44 'DZFT', version=1, type=1 (GAME_STATE), size=1224, flags=0
+        data += struct.pack("<IHHHH", 0x54465A44, 1, 1, 1224, 0)
+
+        # tick + timestampUs + gameMode + gameFlags + score + timer
+        data += struct.pack("<IQBB2Bf",
+            self.tick,
+            int(time.time() * 1_000_000),  # timestampUs
+            0,  # gameMode
+            0,  # gameFlags
+            self.score[0], self.score[1],
+            self.timer)
+
+        # Ball: pos[3] + vel[3] + rot[3] + ownedTeam + ownedPlayer + pad[2]
+        data += struct.pack(BALL_FMT,
+            self.ball_pos[0], self.ball_pos[1], self.ball_pos[2],
+            self.ball_vel[0], self.ball_vel[1], self.ball_vel[2],
+            0.0, 0.0, 0.0,  # rot
+            -1, -1)  # ownedTeam, ownedPlayer
+
+        # 22 players: pos[3] + vel[3] + dir[3] + rotY + anim + team + role + flags + tiredFactor
         for p in self.players:
+            speed = math.sqrt(p["vel"][0]**2 + p["vel"][1]**2 + p["vel"][2]**2)
+            anim = 0 if speed < 0.1 else (1 if speed < 0.5 else 2)
+            role = 0 if p["idx"] % 11 == 0 else 1  # GK=0, field=1
             data += struct.pack(PLAYER_FMT,
                 p["pos"][0], p["pos"][1], p["pos"][2],
                 p["vel"][0], p["vel"][1], p["vel"][2],
-                0.0,  # rot
-                0,    # anim_id
-                p["team"])
+                0.0, 0.0, 1.0,  # dir (default facing +Y)
+                0.0,  # rotY
+                anim,
+                p["team"],
+                role,
+                1,  # flags: active
+                0.0)  # tiredFactor
 
-        # Ball
-        data += struct.pack(BALL_FMT,
-            self.ball_pos[0], self.ball_pos[1], self.ball_pos[2],
-            self.ball_vel[0], self.ball_vel[1], self.ball_vel[2])
+        # 3 officials: referee, linesmanNorth, linesmanSouth
+        officials_def = [
+            ([0.0, 0.0, 0.0], [0.0, 1.0, 0.0], 0), # referee central
+            ([0.0, -2.5, 0.0], [1.0, 0.0, 0.0], 1), # linesman North
+            ([0.0, 2.5, 0.0], [-1.0, 0.0, 0.0], 2) # linesman South
+        ]
+        for opos, odir, orole in officials_def:
+            data += struct.pack(OFFICIAL_FMT,
+                opos[0], opos[1], opos[2],
+                odir[0], odir[1], odir[2],
+                0.0, # rotY
+                0,   # anim: IDLE
+                2,   # team: officials
+                orole,
+                1)   # flags: active
 
-        # Score, timer, game_mode, tick
-        data += struct.pack("<2ifB3xI",
-            self.score[0], self.score[1],
-            self.timer,
-            0,  # game_mode
-            self.tick)
-
-        assert len(data) == 748, f"GameState size mismatch: {len(data)} != 748"
+        assert len(data) == 1224, f"GameState size mismatch: {len(data)} != 1224"
         return bytes(data)
 
     def pack_event(self, event):
-        """Pack MatchEvent into 28 bytes"""
+        """Pack MatchEvent into 36 bytes matching C++ DZFootProtocol.h"""
         return struct.pack(EVENT_FMT,
+            0x54465A44, 1, 2, 36, 0,  # header: magic, version, type=EVENT, size=36, flags
             event["type"],
             event["team"],
             0,  # player_idx
+            0,  # extra
             event["pos"][0], event["pos"][1], event["pos"][2],
             self.tick,
             self.score[0], self.score[1])

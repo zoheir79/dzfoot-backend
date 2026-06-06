@@ -1,22 +1,6 @@
--- Seed data for DZFoot — Algerian Ligue 1 Mobilis clubs (2024-25)
-INSERT INTO teams (name, country, short_name, color_primary, color_secondary, color_rgb1, color_rgb2, league, formation, kit_texture_url) VALUES
-('CR Belouizdad', 'Algeria', 'CRB', '#DC0000', '#FFFFFF', '220,0,0', '255,255,255', 'Ligue 1 Mobilis', '4-3-3', 'images_teams/ligue1dz/crbelouizdad_dzfoot'),
-('JS Kabylie', 'Algeria', 'JSK', '#FFD700', '#008000', '255,215,0', '0,128,0', 'Ligue 1 Mobilis', '4-3-3', 'images_teams/ligue1dz/jskabylie_dzfoot'),
-('MC Alger', 'Algeria', 'MCA', '#DC0000', '#008000', '220,0,0', '0,128,0', 'Ligue 1 Mobilis', '4-3-3', 'images_teams/ligue1dz/mcalger_dzfoot'),
-('USM Alger', 'Algeria', 'USM', '#000000', '#DC0000', '0,0,0', '220,0,0', 'Ligue 1 Mobilis', '4-3-3', 'images_teams/ligue1dz/usmalger_dzfoot'),
-('ES Setif', 'Algeria', 'ESS', '#000000', '#FFFFFF', '0,0,0', '255,255,255', 'Ligue 1 Mobilis', '4-3-3', 'images_teams/ligue1dz/essetif_dzfoot'),
-('CS Constantine', 'Algeria', 'CSC', '#DC0000', '#008000', '220,0,0', '0,128,0', 'Ligue 1 Mobilis', '4-3-3', 'images_teams/ligue1dz/csconstantine_dzfoot'),
-('Paradou AC', 'Algeria', 'PAC', '#FFD700', '#0000C8', '255,215,0', '0,0,200', 'Ligue 1 Mobilis', '4-3-3', 'images_teams/ligue1dz/paradouac_dzfoot'),
-('ASO Chlef', 'Algeria', 'ASO', '#FF8C00', '#000000', '255,140,0', '0,0,0', 'Ligue 1 Mobilis', '4-3-3', 'images_teams/ligue1dz/asochlef_dzfoot'),
-('MC Oran', 'Algeria', 'MCO', '#DC0000', '#FFFFFF', '220,0,0', '255,255,255', 'Ligue 1 Mobilis', '4-3-3', 'images_teams/ligue1dz/mcoran_dzfoot'),
-('ES Ben Aknoun', 'Algeria', 'ESB', '#FFFFFF', '#000000', '255,255,255', '0,0,0', 'Ligue 1 Mobilis', '4-3-3', 'images_teams/ligue1dz/esbenaknoun_dzfoot'),
-('ES Mostaganem', 'Algeria', 'ESM', '#000080', '#FFFFFF', '0,0,128', '255,255,255', 'Ligue 1 Mobilis', '4-3-3', 'images_teams/ligue1dz/esmostaganem_dzfoot'),
-('JS Saoura', 'Algeria', 'JSS', '#008000', '#FFD700', '0,128,0', '255,215,0', 'Ligue 1 Mobilis', '4-3-3', 'images_teams/ligue1dz/jssaoura_dzfoot'),
-('MB Rouissat', 'Algeria', 'MBR', '#0000FF', '#FFFFFF', '0,0,255', '255,255,255', 'Ligue 1 Mobilis', '4-3-3', 'images_teams/ligue1dz/mbrouissat_dzfoot'),
-('MC El Bayadh', 'Algeria', 'MCE', '#008000', '#FFFFFF', '0,128,0', '255,255,255', 'Ligue 1 Mobilis', '4-3-3', 'images_teams/ligue1dz/mcelbayadh_dzfoot'),
-('O Akbou', 'Algeria', 'OAK', '#FF0000', '#000000', '255,0,0', '0,0,0', 'Ligue 1 Mobilis', '4-3-3', 'images_teams/ligue1dz/oakbou_dzfoot'),
-('USM Khenchela', 'Algeria', 'USK', '#000000', '#FFD700', '0,0,0', '255,215,0', 'Ligue 1 Mobilis', '4-3-3', 'images_teams/ligue1dz/usmkhenchela_dzfoot');
+-- Seed data for DZFoot — Algerian Ligue 1 Mobilis (Deterministic from clubs.json)
 
+-- 1. Insert Stadiums
 INSERT INTO stadiums (name, city, capacity, ar_marker_ref, pitch_texture) VALUES
 ('Stade 5 Juillet 1962', 'Algiers', 80000, 'marker_5juillet', 'grass_sunny'),
 ('Stade 20 Aout 1955', 'Algiers', 15000, 'marker_20aout', 'grass_sunny'),
@@ -27,77 +11,28 @@ INSERT INTO stadiums (name, city, capacity, ar_marker_ref, pitch_texture) VALUES
 ('Stade Mohamed Hamlaoui', 'Constantine', 30000, 'marker_constantine', 'grass_sunny'),
 ('Stade 24 Fevrier 1956', 'Sidi Bel Abbes', 20000, 'marker_sba', 'grass_overcast');
 
--- Helper: full player insert with all 22 skills (avoids giant column list each row)
--- Algeria FC 4-3-3 (11 players)
-WITH t AS (SELECT id FROM teams WHERE name='CR Belouizdad')
-INSERT INTO players (
-  team_id, name, position, number,
-  speed, shooting, passing, defense, stamina,
-  physical_balance, physical_reaction, physical_acceleration, physical_velocity, physical_stamina,
-  physical_agility, physical_shotpower,
-  technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
-  technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
-  mental_calmness, mental_workrate, mental_resilience,
-  mental_defensivepositioning, mental_offensivepositioning, mental_vision
-)
-SELECT t.id, 'Mbolhi',    'GK', 23,
-  0.70, 0.40, 0.60, 0.88, 0.82,  -- legacy
-  0.75, 0.82, 0.72, 0.70, 0.82, 0.70, 0.60,  -- physical
-  0.88, 0.65, 0.55, 0.45, 0.60, 0.55, 0.50, 0.40, 0.30,  -- technical
-  0.85, 0.80, 0.88, 0.92, 0.20, 0.70 FROM t  -- mental
-UNION ALL SELECT t.id, 'Mandi',     'CB', 2,
-  0.72, 0.55, 0.68, 0.85, 0.82,
-  0.82, 0.78, 0.68, 0.72, 0.82, 0.65, 0.72,
-  0.85, 0.80, 0.68, 0.55, 0.72, 0.65, 0.78, 0.55, 0.45,
-  0.78, 0.82, 0.85, 0.88, 0.55, 0.72 FROM t
-UNION ALL SELECT t.id, 'Bensebaini','CB', 5,
-  0.74, 0.50, 0.65, 0.82, 0.80,
-  0.80, 0.76, 0.70, 0.74, 0.80, 0.68, 0.70,
-  0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.50, 0.40,
-  0.76, 0.80, 0.82, 0.85, 0.50, 0.70 FROM t
-UNION ALL SELECT t.id, 'Atal',      'LB', 20,
-  0.88, 0.60, 0.72, 0.70, 0.78,
-  0.75, 0.82, 0.88, 0.88, 0.78, 0.90, 0.72,
-  0.70, 0.65, 0.72, 0.75, 0.75, 0.70, 0.68, 0.60, 0.45,
-  0.74, 0.88, 0.78, 0.72, 0.70, 0.75 FROM t
-UNION ALL SELECT t.id, 'Zedadka',   'RB', 21,
-  0.82, 0.55, 0.68, 0.72, 0.78,
-  0.76, 0.78, 0.80, 0.82, 0.78, 0.82, 0.68,
-  0.72, 0.68, 0.68, 0.65, 0.70, 0.65, 0.68, 0.55, 0.40,
-  0.72, 0.82, 0.76, 0.74, 0.68, 0.72 FROM t
-UNION ALL SELECT t.id, 'Bennacer',  'CM', 4,
-  0.78, 0.70, 0.90, 0.65, 0.85,
-  0.75, 0.85, 0.76, 0.78, 0.85, 0.78, 0.68,
-  0.72, 0.68, 0.85, 0.72, 0.90, 0.82, 0.72, 0.70, 0.50,
-  0.88, 0.86, 0.82, 0.70, 0.75, 0.88 FROM t
-UNION ALL SELECT t.id, 'Zerrouki',  'CM', 6,
-  0.76, 0.62, 0.82, 0.70, 0.84,
-  0.78, 0.80, 0.74, 0.76, 0.84, 0.74, 0.70,
-  0.75, 0.70, 0.80, 0.68, 0.85, 0.78, 0.68, 0.62, 0.48,
-  0.82, 0.84, 0.80, 0.72, 0.72, 0.82 FROM t
-UNION ALL SELECT t.id, 'Feghouli',  'CM', 10,
-  0.76, 0.68, 0.78, 0.58, 0.76,
-  0.72, 0.78, 0.76, 0.76, 0.76, 0.78, 0.72,
-  0.58, 0.55, 0.78, 0.72, 0.80, 0.72, 0.74, 0.68, 0.55,
-  0.80, 0.82, 0.78, 0.62, 0.72, 0.82 FROM t
-UNION ALL SELECT t.id, 'Benrahma',  'LW', 7,
-  0.88, 0.82, 0.78, 0.45, 0.72,
-  0.68, 0.82, 0.88, 0.88, 0.72, 0.90, 0.78,
-  0.42, 0.40, 0.85, 0.88, 0.78, 0.72, 0.70, 0.82, 0.65,
-  0.76, 0.78, 0.74, 0.48, 0.82, 0.80 FROM t
-UNION ALL SELECT t.id, 'Mahrez',    'RW', 26,
-  0.85, 0.86, 0.84, 0.40, 0.75,
-  0.70, 0.86, 0.82, 0.85, 0.75, 0.88, 0.82,
-  0.40, 0.38, 0.90, 0.88, 0.82, 0.75, 0.85, 0.86, 0.72,
-  0.82, 0.80, 0.78, 0.45, 0.88, 0.85 FROM t
-UNION ALL SELECT t.id, 'Bounedjah', 'CF', 9,
-  0.74, 0.88, 0.60, 0.42, 0.78,
-  0.82, 0.78, 0.72, 0.74, 0.78, 0.68, 0.85,
-  0.42, 0.40, 0.72, 0.60, 0.60, 0.78, 0.88, 0.78, 0.75,
-  0.78, 0.76, 0.80, 0.45, 0.88, 0.72 FROM t;
+-- 2. Insert Teams with real names, logos, colors
+INSERT INTO teams (name, country, logo_url, kit_texture_url, short_name, color_primary, color_secondary, color_rgb1, color_rgb2, league, formation) VALUES
+('Association sportive olympique de Chlef', 'Algeria', 'https://lfp.dz/clubs-logos/524-1663164373.png', 'images_teams/ligue1dz/asochlef_dzfoot', 'ASO', '#FF8C00', '#000000', '255,140,0', '0,0,0', 'Ligue 1 Mobilis', '4-3-3'),
+('Chabab Riadhi Belouizdad', 'Algeria', 'https://lfp.dz/clubs-logos/670-1720191144.png', 'images_teams/ligue1dz/crbelouizdad_dzfoot', 'CRB', '#DC0000', '#FFFFFF', '220,0,0', '255,255,255', 'Ligue 1 Mobilis', '4-3-3'),
+('Club Sportive Constantinois', 'Algeria', 'https://lfp.dz/clubs-logos/678-1744537577.png', 'images_teams/ligue1dz/csconstantine_dzfoot', 'CSC', '#DC0000', '#008000', '220,0,0', '0,128,0', 'Ligue 1 Mobilis', '4-3-3'),
+('Étoile sportive de Ben Aknoun', 'Algeria', 'https://lfp.dz/clubs-logos/755-1663164159.png', 'images_teams/ligue1dz/esbenaknoun_dzfoot', 'ESB', '#FFFFFF', '#000000', '255,255,255', '0,0,0', 'Ligue 1 Mobilis', '4-3-3'),
+('Espérance Sportive Mostaganem', 'Algeria', 'https://lfp.dz/clubs-logos/694-1731313668.png', 'images_teams/ligue1dz/esmostaganem_dzfoot', 'ESM', '#000080', '#FFFFFF', '0,0,128', '255,255,255', 'Ligue 1 Mobilis', '4-3-3'),
+('Entente sportive de setif', 'Algeria', 'https://lfp.dz/clubs-logos/essetif.png', 'images_teams/ligue1dz/essetif_dzfoot', 'ESS', '#000000', '#FFFFFF', '0,0,0', '255,255,255', 'Ligue 1 Mobilis', '4-3-3'),
+('JEUNESSE SPORTIVE DE KABYLIE', 'Algeria', 'https://lfp.dz/clubs-logos/jsk.png', 'images_teams/ligue1dz/jskabylie_dzfoot', 'JSK', '#FFD700', '#008000', '255,215,0', '0,128,0', 'Ligue 1 Mobilis', '4-3-3'),
+('JEUNESSE SPORTIVE SAOURA', 'Algeria', 'https://lfp.dz/clubs-logos/jssaoura.png', 'images_teams/ligue1dz/jssaoura_dzfoot', 'JSS', '#008000', '#FFD700', '0,128,0', '255,215,0', 'Ligue 1 Mobilis', '4-3-3'),
+('Moustekbel Baladyat Rouissat', 'Algeria', 'https://lfp.dz/clubs-logos/409-1755174810.png', 'images_teams/ligue1dz/mbrouissat_dzfoot', 'MBR', '#0000FF', '#FFFFFF', '0,0,255', '255,255,255', 'Ligue 1 Mobilis', '4-3-3'),
+('Moulodia Club d''Alger', 'Algeria', 'https://lfp.dz/clubs-logos/677-1715269288.png', 'images_teams/ligue1dz/mcalger_dzfoot', 'MCA', '#DC0000', '#008000', '220,0,0', '0,128,0', 'Ligue 1 Mobilis', '4-3-3'),
+('Mouloudia Club El Bayadh', 'Algeria', 'https://lfp.dz/clubs-logos/657-1642322327.png', 'images_teams/ligue1dz/mcelbayadh_dzfoot', 'MCE', '#008000', '#FFFFFF', '0,128,0', '255,255,255', 'Ligue 1 Mobilis', '4-3-3'),
+('MOULOUDIA CLUB ORANAIS', 'Algeria', 'https://lfp.dz/clubs-logos/675-1757531391.png', 'images_teams/ligue1dz/mcoran_dzfoot', 'MCO', '#DC0000', '#FFFFFF', '220,0,0', '255,255,255', 'Ligue 1 Mobilis', '4-3-3'),
+('Olympique Akbou', 'Algeria', 'https://lfp.dz/clubs-logos/758-1770131189.png', 'images_teams/ligue1dz/oakbou_dzfoot', 'OAK', '#FF0000', '#000000', '255,0,0', '0,0,0', 'Ligue 1 Mobilis', '4-3-3'),
+('Paradou Athletic Club', 'Algeria', 'https://lfp.dz/clubs-logos/680-1727168658.png', 'images_teams/ligue1dz/paradouac_dzfoot', 'PAC', '#FFD700', '#0000C8', '255,215,0', '0,0,200', 'Ligue 1 Mobilis', '4-3-3'),
+('SSPA UNION SPORTIVE MADINET D''ALGER', 'Algeria', 'https://lfp.dz/clubs-logos/673-1715352459.png', 'images_teams/ligue1dz/usmalger_dzfoot', 'USM', '#000000', '#DC0000', '0,0,0', '220,0,0', 'Ligue 1 Mobilis', '4-3-3'),
+('Union Sportive Madinet Khenchela', 'Algeria', 'https://lfp.dz/clubs-logos/653-1663164387.png', 'images_teams/ligue1dz/usmkhenchela_dzfoot', 'USK', '#000000', '#FFD700', '0,0,0', '255,215,0', 'Ligue 1 Mobilis', '4-3-3');
 
--- JS Kabylie 4-3-3 (11 players)
-WITH t AS (SELECT id FROM teams WHERE name='JS Kabylie')
+-- 3. Insert Players for each Team
+-- Players for Association sportive olympique de Chlef
+WITH t AS (SELECT id FROM teams WHERE name='Association sportive olympique de Chlef')
 INSERT INTO players (
   team_id, name, position, number,
   speed, shooting, passing, defense, stamina,
@@ -106,60 +41,772 @@ INSERT INTO players (
   technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
   technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
   mental_calmness, mental_workrate, mental_resilience,
-  mental_defensivepositioning, mental_offensivepositioning, mental_vision
-)
-SELECT t.id, 'Saichi',    'GK', 1,
-  0.72, 0.45, 0.68, 0.82, 0.82,
-  0.78, 0.85, 0.72, 0.70, 0.82, 0.74, 0.65,
-  0.82, 0.62, 0.62, 0.50, 0.68, 0.60, 0.58, 0.45, 0.35,
-  0.82, 0.80, 0.85, 0.85, 0.28, 0.72 FROM t
-UNION ALL SELECT t.id, 'Benlamri',  'CB', 4,
-  0.72, 0.58, 0.75, 0.85, 0.82,
-  0.82, 0.78, 0.70, 0.72, 0.82, 0.68, 0.70,
-  0.85, 0.80, 0.70, 0.58, 0.75, 0.68, 0.80, 0.58, 0.48,
-  0.80, 0.82, 0.85, 0.88, 0.58, 0.76 FROM t
-UNION ALL SELECT t.id, 'Belkebla',  'CM', 5,
-  0.76, 0.68, 0.80, 0.78, 0.85,
-  0.78, 0.80, 0.74, 0.76, 0.85, 0.74, 0.72,
-  0.78, 0.74, 0.80, 0.70, 0.80, 0.76, 0.72, 0.68, 0.55,
-  0.82, 0.88, 0.82, 0.78, 0.68, 0.82 FROM t
-UNION ALL SELECT t.id, 'Boudene',   'LW', 10,
-  0.88, 0.82, 0.82, 0.42, 0.74,
-  0.70, 0.85, 0.88, 0.88, 0.74, 0.90, 0.76,
-  0.42, 0.38, 0.88, 0.86, 0.82, 0.76, 0.70, 0.82, 0.72,
-  0.78, 0.82, 0.78, 0.48, 0.88, 0.86 FROM t
-UNION ALL SELECT t.id, 'Hamroune',  'RW', 7,
-  0.90, 0.80, 0.78, 0.40, 0.80,
-  0.68, 0.82, 0.92, 0.90, 0.80, 0.92, 0.74,
-  0.40, 0.36, 0.86, 0.88, 0.78, 0.70, 0.68, 0.80, 0.68,
-  0.74, 0.86, 0.76, 0.46, 0.86, 0.84 FROM t
-UNION ALL SELECT t.id, 'Banoune',   'CF', 9,
-  0.78, 0.82, 0.68, 0.48, 0.80,
-  0.80, 0.78, 0.76, 0.78, 0.80, 0.74, 0.80,
-  0.48, 0.44, 0.76, 0.70, 0.68, 0.64, 0.82, 0.82, 0.74,
-  0.78, 0.84, 0.80, 0.50, 0.86, 0.78 FROM t
-UNION ALL SELECT t.id, 'Player7',   'CM', 8,
-  0.70, 0.70, 0.70, 0.65, 0.70,
-  0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70,
-  0.65, 0.60, 0.70, 0.65, 0.70, 0.65, 0.60, 0.70, 0.55,
-  0.70, 0.70, 0.70, 0.65, 0.65, 0.70 FROM t
-UNION ALL SELECT t.id, 'Player8',   'CB', 3,
-  0.70, 0.70, 0.70, 0.65, 0.70,
-  0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70,
-  0.65, 0.60, 0.70, 0.65, 0.70, 0.65, 0.60, 0.70, 0.55,
-  0.70, 0.70, 0.70, 0.65, 0.65, 0.70 FROM t
-UNION ALL SELECT t.id, 'Player9',   'LB', 6,
-  0.70, 0.70, 0.70, 0.65, 0.70,
-  0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70,
-  0.65, 0.60, 0.70, 0.65, 0.70, 0.65, 0.60, 0.70, 0.55,
-  0.70, 0.70, 0.70, 0.65, 0.65, 0.70 FROM t
-UNION ALL SELECT t.id, 'Player10',  'RB', 2,
-  0.70, 0.70, 0.70, 0.65, 0.70,
-  0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70,
-  0.65, 0.60, 0.70, 0.65, 0.70, 0.65, 0.60, 0.70, 0.55,
-  0.70, 0.70, 0.70, 0.65, 0.65, 0.70 FROM t
-UNION ALL SELECT t.id, 'Player11',  'RM', 11,
-  0.70, 0.70, 0.70, 0.65, 0.70,
-  0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70,
-  0.65, 0.60, 0.70, 0.65, 0.70, 0.65, 0.60, 0.70, 0.55,
-  0.70, 0.70, 0.70, 0.65, 0.65, 0.70 FROM t;
+  mental_defensivepositioning, mental_offensivepositioning, mental_vision,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+) SELECT t.id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  pb, pr, pa, pv, ps, pag, psp,
+  tst, tsl, tbc, td, tsp, thp, th, tsh, tv,
+  mc, mw, mr, mdp, mop, mv,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+FROM t, (VALUES
+  ('MEDJADEL ABDERRAHMANE', 'GK', 16, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-640361-1756651351.png', 'images/players/41116.png', '6073791c', 5, 0, 1, 0, 3, 1),
+  ('RAHMANI CHAMCE EDDINE', 'GK', 30, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/40460.png', '1058ec5e', 2, 3, 4, 2, 1, 3),
+  ('BARKA Mohammed El-Amine', 'CB', 3, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637413-1756650523.png', 'images/players/40900.png', '5a1e8c53', 6, 0, 4, 3, 2, 3),
+  ('BOUABTA TAREK', 'LB', 21, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637415-1756651563.png', 'images/players/378265.png', '567857ff', 2, 0, 7, 3, 1, 3),
+  ('SADAHINE AYYOUB', 'RB', 6, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637419-1756650630.png', 'images/players/44392.png', '9a8870ff', 0, 1, 0, 3, 2, 1),
+  ('BRAHIMI Belkacem', 'CB', 20, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637421-1756651516.png', 'images/players/40922.png', '7b666226', 4, 2, 2, 2, 1, 1),
+  ('DEBBARI Abdelhak', 'LB', 26, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637423-1756651753.png', 'images/players/40891.png', '054d7437', 5, 2, 4, 3, 0, 2),
+  ('AZZOUZ  KARIM', 'RB', 14, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637425-1756651222.png', 'images/players/50864.png', 'ce0c87ca', 3, 2, 7, 2, 2, 2),
+  ('BEKKOUCHE Chems Eddine', 'CB', 15, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-639661-1756651296.png', 'images/players/40534.png', '4674be0c', 0, 1, 6, 0, 1, 2),
+  ('ABDELLI  ZAKARIA', 'LB', 4, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/50009.png', '62a337eb', 0, 3, 7, 3, 0, 2),
+  ('Rahmani Fouad', 'RB', 24, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/40680.png', '7addf005', 3, 1, 0, 1, 3, 1),
+  ('LARBI  Imad eddine', 'CM', 10, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637416-1756651018.png', 'images/players/40814.png', '8b440af8', 6, 3, 2, 0, 2, 0),
+  ('ABBOUB MOHAMMED ILYAS', 'LM', 8, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637420-1756650948.png', 'images/players/377413.png', '2c8b1aed', 2, 4, 2, 1, 1, 3),
+  ('FARHI  Ibrahim ben halima', 'RM', 5, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637422-1756650565.png', 'images/players/40307.png', '587f1db0', 4, 2, 5, 0, 0, 0),
+  ('BELALEM DJAMEL', 'CM', 18, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637741-1756651393.png', 'images/players/40912.png', 'e6cbaa01', 6, 3, 2, 1, 1, 2),
+  ('MAHAMADOU MOUSSA ISMAEL', 'LM', 12, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637745-1756651120.png', 'images/players/377677.png', '0b95d043', 4, 4, 0, 3, 3, 3),
+  ('HASSEN KHODJA DALIL ADEL', 'RM', 13, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/44084.png', '095926cd', 2, 4, 6, 1, 0, 0),
+  ('AIBOUD Samir', 'CM', 17, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/40892.png', '648680ec', 2, 4, 0, 0, 0, 3),
+  ('BENCHOUYA ANIS ELHADJ', 'LW', 2, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/40852.png', '19695ff1', 4, 0, 7, 1, 0, 2),
+  ('KOUADRI-HABBAZ  AYMEN', 'RW', 19, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637424-1756651466.png', 'images/players/64769.png', '0638cd8e', 6, 1, 5, 2, 2, 2),
+  ('FEDDAL   AISSA', 'CF', 27, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637742-1756651795.png', 'images/players/200405.png', 'ab19e169', 3, 0, 1, 1, 3, 3),
+  ('LEDLUM EDWARD DADDY', 'LW', 22, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637762-1756651633.png', 'images/players/496830.png', 'f089a7a4', 2, 2, 7, 0, 1, 2),
+  ('AVOTOR KOKOU BRUNO', 'RW', 25, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637765-1756651714.png', 'images/players/499684.png', '1a6b83b3', 5, 2, 3, 3, 3, 2),
+  ('DAHMANE BOUNOUA MOHAMED', 'CF', 29, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-639931-1756651940.png', 'images/players/164212.png', 'b3dfa1c7', 4, 3, 1, 3, 2, 1),
+  ('BELARIBI YASSER', 'LW', 11, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/41143.png', '849e57b2', 6, 3, 7, 2, 2, 3)
+) AS tmp(name, position, number, speed, shooting, passing, defense, stamina, pb, pr, pa, pv, ps, pag, psp, tst, tsl, tbc, td, tsp, thp, th, tsh, tv, mc, mw, mr, mdp, mop, mv, photo_url, photo_local, avatar_config_id, skin_color, hair_style, hair_color, body_type, beard_style, eye_color);
+
+-- Players for Chabab Riadhi Belouizdad
+WITH t AS (SELECT id FROM teams WHERE name='Chabab Riadhi Belouizdad')
+INSERT INTO players (
+  team_id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  physical_balance, physical_reaction, physical_acceleration, physical_velocity, physical_stamina,
+  physical_agility, physical_shotpower,
+  technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
+  technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
+  mental_calmness, mental_workrate, mental_resilience,
+  mental_defensivepositioning, mental_offensivepositioning, mental_vision,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+) SELECT t.id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  pb, pr, pa, pv, ps, pag, psp,
+  tst, tsl, tbc, td, tsp, thp, th, tsh, tv,
+  mc, mw, mr, mdp, mop, mv,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+FROM t, (VALUES
+  ('MOKHTAR MOHAMED ANES', 'GK', 16, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636711-1757631510.png', 'images/players/42110.png', '0c0d40e6', 5, 3, 0, 2, 0, 2),
+  ('CHAAL Farid', 'GK', 30, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-640659-1757631877.png', 'images/players/40946.png', 'fc8dd02b', 0, 1, 0, 3, 0, 0),
+  ('BOUSSEDER  TAREK', 'GK', 1, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/40334.png', 'df709a7d', 6, 2, 2, 1, 0, 2),
+  ('ABBACI ISLAM', 'LB', 17, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636712-1757631537.png', 'images/players/52598.png', '3767c402', 6, 3, 4, 2, 2, 0),
+  ('OUASSA YOUNES  ABDELHAK', 'RB', 25, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/41181.png', '7fff5245', 1, 0, 2, 1, 2, 2),
+  ('LAOUAFI  Youcef', 'CB', 21, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637057-1757631652.png', 'images/players/377223.png', '013179cf', 1, 4, 1, 3, 2, 2),
+  ('BENAYADA Houcine', 'LB', 3, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637296-1757633980.png', 'images/players/377257.png', '34cdad7c', 3, 0, 5, 0, 1, 0),
+  ('BENKIHOUL OUSSAMA', 'RB', 14, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-640102-1757631423.png', 'images/players/91362.png', '44cf2441', 5, 2, 4, 1, 0, 2),
+  ('KEDDAD  Chouhaib', 'CB', 2, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-640650-1757629283.png', 'images/players/40947.png', 'd9db238c', 0, 4, 3, 0, 2, 1),
+  ('KHACEF  Mohamed naoufel', 'LB', 24, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-640654-1757631752.png', 'images/players/377287.png', '9e2ff59f', 4, 2, 5, 3, 0, 0),
+  ('BOUKARCHAOUI BILLEL', 'RB', 29, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-640655-1757631848.png', 'images/players/377327.png', '69402aa9', 0, 4, 2, 1, 2, 3),
+  ('BEKKOUR ABDERRAHMANE', 'CB', 4, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-640658-1757629469.png', 'images/players/377418.png', '3b0abf3e', 3, 0, 7, 2, 2, 0),
+  ('KAASSIS DJABER', 'LM', 27, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/41168.png', 'b709436f', 1, 4, 3, 3, 3, 0),
+  ('KELALECH ABDELMALEK', 'RM', 5, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-640100-1757631163.png', 'images/players/52637.png', '0929d975', 2, 1, 1, 1, 3, 1),
+  ('BENGUIT  Abderaouf', 'CM', 8, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-640651-1757631254.png', 'images/players/41196.png', 'c65a4f9f', 2, 0, 7, 3, 2, 2),
+  ('BOUKHANCHOUCHE Salim', 'LM', 18, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/40634.png', '960058b7', 3, 0, 0, 3, 0, 3),
+  ('BENZID Necer  Marouane', 'RM', 6, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/40501.png', '5972bf64', 5, 4, 7, 0, 1, 2),
+  ('AHOUA JEAN CHARLES', 'CM', 10, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/608489.png', '5521c9bd', 1, 3, 1, 1, 1, 0),
+  ('XHIXHA REDON', 'LW', 19, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636706-1757631573.png', 'images/players/505216.png', '43e27128', 4, 1, 1, 0, 1, 1),
+  ('BEN HAMOUDA MOHAMED ALI', 'RW', 20, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636714-1757631616.png', 'images/players/505392.png', '9fa32d32', 5, 3, 5, 2, 1, 3),
+  ('BELHOCINI  Abdennour Iheb', 'CF', 7, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637202-1757631199.png', 'images/players/377261.png', '75179e18', 5, 3, 6, 0, 0, 2),
+  ('BELKHIR Mohammed  Islem', 'LW', 22, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-640040-1757631694.png', 'images/players/40538.png', '9ce1689c', 2, 0, 0, 0, 2, 3),
+  ('BOUSSOUAR LOTFI', 'RW', 13, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-640653-1757631387.png', 'images/players/42101.png', '23482915', 0, 2, 1, 1, 0, 0),
+  ('MEZIANE BENTAHAR Abderrahmane', 'CF', 11, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-640657-1757631344.png', 'images/players/40932.png', '06184b04', 6, 4, 3, 0, 0, 3),
+  ('EL MELALI FARID', 'LW', 28, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-641361-1757631813.png', 'images/players/507470.png', 'dd90b3e3', 4, 4, 3, 3, 2, 1),
+  ('GUERGUOUR CHAFAI', 'RW', 23, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/77025.png', '7a6079ae', 3, 1, 1, 2, 1, 2)
+) AS tmp(name, position, number, speed, shooting, passing, defense, stamina, pb, pr, pa, pv, ps, pag, psp, tst, tsl, tbc, td, tsp, thp, th, tsh, tv, mc, mw, mr, mdp, mop, mv, photo_url, photo_local, avatar_config_id, skin_color, hair_style, hair_color, body_type, beard_style, eye_color);
+
+-- Players for Club Sportive Constantinois
+WITH t AS (SELECT id FROM teams WHERE name='Club Sportive Constantinois')
+INSERT INTO players (
+  team_id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  physical_balance, physical_reaction, physical_acceleration, physical_velocity, physical_stamina,
+  physical_agility, physical_shotpower,
+  technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
+  technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
+  mental_calmness, mental_workrate, mental_resilience,
+  mental_defensivepositioning, mental_offensivepositioning, mental_vision,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+) SELECT t.id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  pb, pr, pa, pv, ps, pag, psp,
+  tst, tsl, tbc, td, tsp, thp, th, tsh, tv,
+  mc, mw, mr, mdp, mop, mv,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+FROM t, (VALUES
+  ('BOUHALFAYA  Zakaria', 'GK', 1, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634388-1756554284.png', 'images/players/40315.png', 'bb6488d2', 5, 0, 0, 2, 3, 0),
+  ('KHENNICHE  MOHAMED  MOUAATAZ', 'GK', 16, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636700-1756554847.png', 'images/players/79038.png', '867919a4', 1, 1, 1, 0, 3, 3),
+  ('NECIR ABDELMALEK', 'GK', 23, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636704-1756555082.png', 'images/players/40664.png', '14cb32dd', 6, 3, 2, 1, 3, 3),
+  ('CHIKHI ABDELMOUMEN', 'LB', 27, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634503-1756555203.png', 'images/players/41018.png', 'ba90df14', 4, 4, 7, 0, 2, 0),
+  ('MEDDAHI Oussama', 'RB', 12, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636262-1756554727.png', 'images/players/40639.png', 'bb6a9f00', 5, 1, 7, 0, 0, 0),
+  ('DERRADJI Chamseddine', 'CB', 19, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636265-1756554910.png', 'images/players/40872.png', '8f1b872f', 3, 2, 7, 3, 2, 2),
+  ('BENADLA ABDERRAHMANE', 'LB', 2, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636690-1756554340.png', 'images/players/63460.png', 'eab77aad', 3, 3, 2, 1, 1, 3),
+  ('NDIAYE MELO', 'RB', 5, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637289-1756554380.png', 'images/players/378261.png', '7239f36d', 2, 2, 3, 1, 0, 2),
+  ('BAOUCHE Houari', 'CB', 8, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637308-1756554557.png', 'images/players/40979.png', 'e9c2d28f', 2, 4, 2, 3, 0, 2),
+  ('BEN MOUSSA RAHMANI IMAD EDDINE', 'LB', 13, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-639330-1756554761.png', 'images/players/2198.png', '7053a638', 0, 3, 6, 0, 2, 1),
+  ('AIT ABDESSELAM AHMED', 'RB', 4, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/41074.png', 'c88c11e4', 4, 0, 1, 0, 1, 1),
+  ('BERKANE MOSTAFA', 'CM', 15, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-634499-1756554805.png', 'images/players/40668.png', 'f273f708', 4, 0, 7, 0, 1, 3),
+  ('BOUZEKRI OUALAA MOUNDHIR', 'LM', 7, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-634500-1756554495.png', 'images/players/40526.png', '6c2e332a', 3, 1, 3, 2, 1, 2),
+  ('BENCHAIRA Mohamed', 'RM', 6, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636258-1756554440.png', 'images/players/40859.png', '65f34e70', 3, 3, 6, 0, 2, 3),
+  ('DIB  Brahim', 'CM', 10, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636260-1756554634.png', 'images/players/40910.png', '8697d6f5', 1, 1, 6, 1, 0, 2),
+  ('MERBAH Messala', 'LM', 18, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636263-1757501416.png', 'images/players/40945.png', '9d8af1ff', 3, 3, 1, 3, 0, 0),
+  ('TAHAR Feth-Allah', 'RM', 30, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636270-1756555278.png', 'images/players/40924.png', '1f4164e2', 3, 0, 4, 2, 3, 2),
+  ('REBIAI Miloud', 'CM', 25, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636703-1756555135.png', 'images/players/40897.png', 'c088b74c', 3, 1, 7, 0, 3, 0),
+  ('BIZIMANA DJIHAD', 'LM', 14, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/608809.png', '6bf5990f', 2, 0, 1, 3, 2, 3),
+  ('MOUAKI  DADI El hocine', 'RW', 11, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636267-1756554675.png', 'images/players/40287.png', '1205ec8f', 4, 0, 4, 3, 1, 0),
+  ('GRINE HATEM', 'CF', 21, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636890-1756555008.png', 'images/players/52616.png', '448bd0a7', 5, 4, 0, 3, 1, 3),
+  ('OMOYELE TOSIN ABRAHAM', 'LW', 22, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637291-1756555050.png', 'images/players/377245.png', 'cf78bddc', 4, 0, 5, 0, 3, 0),
+  ('KHELFAOUI  OUADJIH', 'RW', 20, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637307-1756554971.png', 'images/players/60631.png', '286365b2', 5, 4, 5, 2, 1, 2),
+  ('L''GHOUL NASSIM DJELLOUL SALEM', 'CF', 26, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-638220-1756555170.png', 'images/players/506241.png', '8824a413', 3, 1, 4, 3, 3, 0),
+  ('AGBAGNO YAWO MARCELLE EVRA', 'LW', 9, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/318840.png', 'c31670d5', 6, 2, 0, 1, 2, 0),
+  ('LAHMERI Aimen Abdelaziz', 'RW', 17, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/41026.png', '42555ab2', 3, 0, 2, 2, 3, 2),
+  ('GUENAOUI Ghiles', 'CF', 24, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/41121.png', '6a876f96', 1, 0, 7, 2, 3, 3)
+) AS tmp(name, position, number, speed, shooting, passing, defense, stamina, pb, pr, pa, pv, ps, pag, psp, tst, tsl, tbc, td, tsp, thp, th, tsh, tv, mc, mw, mr, mdp, mop, mv, photo_url, photo_local, avatar_config_id, skin_color, hair_style, hair_color, body_type, beard_style, eye_color);
+
+-- Players for Étoile sportive de Ben Aknoun
+WITH t AS (SELECT id FROM teams WHERE name='Étoile sportive de Ben Aknoun')
+INSERT INTO players (
+  team_id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  physical_balance, physical_reaction, physical_acceleration, physical_velocity, physical_stamina,
+  physical_agility, physical_shotpower,
+  technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
+  technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
+  mental_calmness, mental_workrate, mental_resilience,
+  mental_defensivepositioning, mental_offensivepositioning, mental_vision,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+) SELECT t.id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  pb, pr, pa, pv, ps, pag, psp,
+  tst, tsl, tbc, td, tsp, thp, th, tsh, tv,
+  mc, mw, mr, mdp, mop, mv,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+FROM t, (VALUES
+  ('KADRI DHAYFALLAH', 'GK', 1, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-633778-1756732161.png', 'images/players/68942.png', '892a18c3', 4, 2, 0, 3, 0, 1),
+  ('BOUSSOUF Kheir-Eddine', 'GK', 16, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-633779-1756731098.png', 'images/players/41041.png', '353eea6b', 4, 2, 2, 3, 1, 0),
+  ('BOUDEDJA   AMAYAS', 'GK', 30, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/66482.png', '4168782b', 2, 4, 0, 3, 2, 3),
+  ('TALAH Fateh', 'LB', 15, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-633780-1756731059.png', 'images/players/40902.png', 'bd47afee', 0, 1, 7, 2, 1, 0),
+  ('CHAHROUR ISLAM', 'RB', 4, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634178-1756730702.png', 'images/players/378101.png', '136d3c47', 5, 4, 4, 3, 3, 0),
+  ('LAKEHAL CHEMS-EDDINE', 'CB', 13, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634329-1756730997.png', 'images/players/40350.png', '6aa062c1', 1, 0, 2, 1, 2, 1),
+  ('CHAARAOUI  AYMEN', 'LB', 2, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-635182-1756730611.png', 'images/players/41073.png', '4608c51d', 0, 3, 5, 1, 1, 1),
+  ('OUKALI ABDELKRIM ARSSALEN HAMZA', 'RB', 5, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-635640-1756730747.png', 'images/players/42145.png', '7d025d94', 6, 2, 5, 0, 3, 0),
+  ('TAMIMI ABDELKADER', 'CB', 3, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-635672-1756730661.png', 'images/players/40531.png', 'fba0dc62', 6, 0, 4, 2, 2, 2),
+  ('HACHOUD Abderrahmane', 'LB', 27, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636360-1756731392.png', 'images/players/41083.png', '27ed180e', 4, 2, 0, 2, 3, 2),
+  ('KHALOUF WASSIM', 'RB', 26, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636375-1756731356.png', 'images/players/42473.png', 'e7d63a6b', 0, 4, 2, 3, 2, 2),
+  ('BRAHIMI RAFIK', 'CB', 21, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/43310.png', '19d18fb8', 4, 4, 7, 0, 3, 0),
+  ('BOUNOUA REDOUANE ABDELOUAHID', 'LM', 22, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-633815-1756731295.png', 'images/players/41096.png', '60b0f388', 5, 1, 3, 0, 3, 1),
+  ('YATTOU MOHAMED NASSIM', 'RM', 23, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-634180-1756731323.png', 'images/players/377480.png', '90b06164', 4, 1, 1, 0, 0, 0),
+  ('AISSANI ALAA EDDINE', 'CM', 8, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-634197-1756730845.png', 'images/players/52677.png', 'a4141294', 3, 0, 2, 0, 3, 1),
+  ('BENCHELOUCHE  MASSINISSA', 'LM', 6, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-635198-1756730777.png', 'images/players/40463.png', 'dd9582f4', 4, 4, 2, 0, 0, 0),
+  ('BOUAMAMA BADIS', 'RM', 10, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-635864-1756730931.png', 'images/players/58604.png', '17c188e9', 2, 3, 0, 1, 2, 2),
+  ('BENABDI AZIZ', 'CM', 20, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-635866-1756731205.png', 'images/players/377295.png', 'f9b4cdc0', 4, 0, 5, 0, 1, 2),
+  ('ARRACHE FADI', 'LM', 29, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-635870-1756731427.png', 'images/players/59256.png', '8ab9bcae', 5, 0, 4, 2, 0, 0),
+  ('SAAD Abdeldjalil Taki Eddine', 'RW', 9, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-634090-1756730874.png', 'images/players/40866.png', '2d25c0a9', 3, 2, 0, 1, 0, 3),
+  ('SOUIBAAH Mohamed', 'CF', 19, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-634179-1756731154.png', 'images/players/40644.png', '9af7c14c', 0, 2, 1, 0, 3, 1),
+  ('DJABOUT ADIL', 'LW', 7, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-635197-1756730806.png', 'images/players/40864.png', 'fb8948ed', 6, 2, 0, 1, 3, 1),
+  ('ALLAM YANIS', 'RW', 17, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-635867-1756731128.png', 'images/players/377363.png', '66c44b62', 4, 1, 3, 2, 0, 0),
+  ('ZAOUACHE Ahmed', 'CF', 11, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-635869-1756730970.png', 'images/players/377263.png', 'cecb4247', 3, 3, 2, 3, 3, 2),
+  ('ABRI CHAKIB', 'LW', 14, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636361-1756731034.png', 'images/players/63590.png', 'f33acfc1', 5, 3, 7, 1, 1, 1),
+  ('MOHAMED SIDIKI SYLLA', 'RW', 24, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-641673-1757791453.png', 'images/players/377490.png', 'bbf7eac9', 5, 2, 2, 1, 0, 2),
+  ('HAMMIA Mohamed El Amine', 'CF', 25, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/40641.png', '7191714e', 1, 0, 1, 2, 2, 3)
+) AS tmp(name, position, number, speed, shooting, passing, defense, stamina, pb, pr, pa, pv, ps, pag, psp, tst, tsl, tbc, td, tsp, thp, th, tsh, tv, mc, mw, mr, mdp, mop, mv, photo_url, photo_local, avatar_config_id, skin_color, hair_style, hair_color, body_type, beard_style, eye_color);
+
+-- Players for Espérance Sportive Mostaganem
+WITH t AS (SELECT id FROM teams WHERE name='Espérance Sportive Mostaganem')
+INSERT INTO players (
+  team_id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  physical_balance, physical_reaction, physical_acceleration, physical_velocity, physical_stamina,
+  physical_agility, physical_shotpower,
+  technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
+  technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
+  mental_calmness, mental_workrate, mental_resilience,
+  mental_defensivepositioning, mental_offensivepositioning, mental_vision,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+) SELECT t.id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  pb, pr, pa, pv, ps, pag, psp,
+  tst, tsl, tbc, td, tsp, thp, th, tsh, tv,
+  mc, mw, mr, mdp, mop, mv,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+FROM t, (VALUES
+  ('AZIRIA MOUNIR', 'GK', 0, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637040-1758063995.png', 'images/players/185821.png', 'e05d4ea1', 0, 3, 6, 1, 1, 3),
+  ('HANNANE ABDESSLAM', 'GK', 1, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637301-1758024542.png', 'images/players/43057.png', 'fc48c18d', 0, 2, 1, 1, 2, 1),
+  ('SLIMANE ABDEL ILLAH', 'CB', 0, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636887-1758059556.png', 'images/players/83058.png', '0a5614a2', 3, 1, 4, 2, 0, 2),
+  ('LAIRECHE FARID HAMZA', 'LB', 0, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636892-1758056042.png', 'images/players/83068.png', 'd12f1176', 6, 2, 1, 2, 3, 2),
+  ('MESMOUDI Boualem', 'RB', 3, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637061-1758024762.png', 'images/players/377297.png', '4776fe1e', 1, 3, 6, 2, 0, 2),
+  ('BOUALLEG Aymene', 'CB', 2, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637162-1758024633.png', 'images/players/40568.png', '787ee46f', 1, 1, 4, 3, 0, 0),
+  ('BENAMMAR BENALI', 'LB', 4, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637302-1758024904.png', 'images/players/40967.png', '79517f8b', 2, 1, 7, 3, 3, 3),
+  ('BAHOUSSI Abdeldjalil', 'RB', 27, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/377236.png', 'ecb124d7', 5, 2, 4, 3, 2, 3),
+  ('EZZEMANI Mohammed Amine', 'CB', 12, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/40927.png', 'bda4c010', 0, 4, 0, 0, 1, 2),
+  ('LAMRI SID ALI', 'LM', 13, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637161-1758047957.png', 'images/players/40638.png', '1f89494b', 3, 2, 1, 3, 1, 3),
+  ('BEN KHELIFA TAHER', 'RM', 8, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637266-1758025672.png', 'images/players/40939.png', 'fd77266e', 1, 4, 6, 2, 1, 0),
+  ('BIBI ABOU BAKR', 'CM', 19, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637304-1758055771.png', 'images/players/42949.png', '5b6f47cb', 0, 1, 7, 3, 1, 1),
+  ('BENAMARA Abdelhafid', 'LM', 6, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637369-1758025238.png', 'images/players/40961.png', 'a64cf3a9', 5, 1, 3, 1, 3, 0),
+  ('EL MOUDEN ABDELLAH', 'RM', 10, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637371-1758028963.png', 'images/players/377300.png', 'd81a2547', 6, 1, 5, 3, 1, 2),
+  ('GAGAA Ahmed', 'CM', 21, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637380-1758055856.png', 'images/players/40925.png', 'cb4ef9e9', 0, 3, 1, 1, 1, 0),
+  ('KHODJA EL KACEM', 'LM', 24, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/274351.png', '166a43ab', 1, 1, 3, 3, 0, 3),
+  ('BENGRINA  Mohamed hacene', 'RM', 14, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/40288.png', '8a588ebb', 5, 3, 6, 3, 2, 1),
+  ('NAMANI  ABDELKRIM', 'CM', 28, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/377308.png', '87fda397', 2, 3, 3, 3, 1, 2),
+  ('HAMDI ILYES', 'LM', 29, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/61541.png', '9b6c3a24', 1, 3, 2, 0, 2, 2),
+  ('MOTRANI ZOUBIR', 'RW', 7, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637032-1758025435.png', 'images/players/40998.png', 'c9352318', 5, 3, 3, 0, 2, 3),
+  ('BOUGUETTAYA AMEUR', 'CF', 22, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637305-1758055902.png', 'images/players/40996.png', '0c7e858d', 5, 1, 5, 1, 3, 3),
+  ('HAROUN ALI', 'LW', 9, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637377-1758028911.png', 'images/players/377296.png', '9823739f', 5, 0, 3, 3, 1, 2),
+  ('SRYER Boualem  Abdelghani', 'RW', 26, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637385-1758059599.png', 'images/players/40589.png', 'cd39ff8e', 2, 2, 7, 2, 0, 2),
+  ('TOUMI SIEF ZINE MOHAMED', 'CF', 20, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-638165-1758680031.png', 'images/players/40956.png', 'c7381f30', 3, 1, 7, 0, 1, 1),
+  ('OTHMANI Abderraouf', 'LW', 11, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/40580.png', '71a4d531', 1, 4, 5, 1, 3, 0)
+) AS tmp(name, position, number, speed, shooting, passing, defense, stamina, pb, pr, pa, pv, ps, pag, psp, tst, tsl, tbc, td, tsp, thp, th, tsh, tv, mc, mw, mr, mdp, mop, mv, photo_url, photo_local, avatar_config_id, skin_color, hair_style, hair_color, body_type, beard_style, eye_color);
+
+-- Players for Entente sportive de setif
+WITH t AS (SELECT id FROM teams WHERE name='Entente sportive de setif')
+INSERT INTO players (
+  team_id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  physical_balance, physical_reaction, physical_acceleration, physical_velocity, physical_stamina,
+  physical_agility, physical_shotpower,
+  technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
+  technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
+  mental_calmness, mental_workrate, mental_resilience,
+  mental_defensivepositioning, mental_offensivepositioning, mental_vision,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+) SELECT t.id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  pb, pr, pa, pv, ps, pag, psp,
+  tst, tsl, tbc, td, tsp, thp, th, tsh, tv,
+  mc, mw, mr, mdp, mop, mv,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+FROM t, (VALUES
+  ('BOUAOUNE ALA EDDINE', 'GK', 30, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/40700.png', 'e353f0f5', 3, 3, 0, 1, 2, 0),
+  ('SAIDI ZAKARIA', 'GK', 16, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637309-1757238622.png', 'images/players/41032.png', '862882b0', 1, 0, 2, 0, 0, 1),
+  ('BENCHEIKH  EL FEGOUN HATEM', 'GK', 1, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/41147.png', '5fbcbecb', 4, 3, 6, 3, 3, 0),
+  ('DERDER ADDA', 'LB', 12, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-633831-1757238453.png', 'images/players/41887.png', 'e1181f59', 1, 4, 7, 1, 1, 3),
+  ('HAMIDI KAMEL', 'RB', 27, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-633832-1757239047.png', 'images/players/41025.png', '9ff80292', 5, 3, 2, 2, 2, 1),
+  ('NAIM ISSAM ABDELHAMID', 'CB', 3, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-633851-1757237220.png', 'images/players/52326.png', '6a09f4bd', 1, 4, 4, 1, 2, 3),
+  ('BOUDECHICHA AISSA', 'LB', 26, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634079-1757239002.png', 'images/players/366698.png', '7cb005dd', 5, 1, 5, 1, 2, 0),
+  ('DOUAR  YOUCEF', 'RB', 5, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636402-1757237311.png', 'images/players/40310.png', '5bb71157', 0, 3, 1, 3, 1, 0),
+  ('BOUBEKEUR IMADEDDINE', 'CB', 4, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636406-1757237252.png', 'images/players/40994.png', 'b09ab3cf', 1, 4, 3, 3, 1, 0),
+  ('BEKAKCHI IBRAHIM EL KHALIL', 'LB', 22, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636447-1757238923.png', 'images/players/40858.png', 'af8250c1', 0, 0, 0, 1, 1, 0),
+  ('KILA OMFIA MICK BRENDY', 'RB', 13, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-853971-1770158945.png', 'images/players/607013.png', '80a9efcc', 2, 4, 7, 0, 1, 1),
+  ('BENSLIMANE   HACHEMI', 'CM', 21, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-633852-1757238879.png', 'images/players/49579.png', '4662fe4d', 0, 3, 6, 1, 2, 3),
+  ('DAIBECHE OUSSAMA', 'LM', 6, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-633853-1757237344.png', 'images/players/41774.png', 'a113edfc', 0, 4, 5, 0, 1, 2),
+  ('ARIB ABDERRAOUF', 'RM', 14, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-633967-1757238509.png', 'images/players/62859.png', 'af710391', 0, 3, 3, 1, 2, 3),
+  ('TOUAL KHEIR EDDINE', 'CM', 11, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-634583-1757238415.png', 'images/players/41194.png', '914bcf92', 5, 0, 7, 2, 2, 3),
+  ('MUDASIRU SALIFU', 'LM', 29, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-634588-1757239130.png', 'images/players/504149.png', 'f2ddf150', 4, 1, 1, 0, 0, 1),
+  ('DJAHNIT AKRAM', 'RM', 10, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636404-1757238361.png', 'images/players/40650.png', 'c151735c', 4, 1, 3, 0, 2, 3),
+  ('BOUKERMA MOHAMMED', 'CM', 17, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636408-1757238656.png', 'images/players/40616.png', '2d899a95', 3, 2, 2, 1, 1, 1),
+  ('BENLEBNA MOHAMED CHEMS EDDINE', 'LW', 9, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-633850-1757238322.png', 'images/players/52986.png', '05e06d5e', 5, 4, 5, 2, 0, 2),
+  ('ZERROUKI Merouane', 'RW', 20, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-635078-1757238821.png', 'images/players/40482.png', '7c6e2f19', 5, 0, 7, 1, 1, 0),
+  ('GHERBI YOUCEF', 'CF', 28, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636407-1757239087.png', 'images/players/65106.png', '2b232b43', 1, 0, 3, 3, 3, 1),
+  ('NKAYA WILFRID', 'LW', 7, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-854482-1770158863.png', 'images/players/607284.png', 'ef34d2a8', 1, 2, 2, 0, 3, 3),
+  ('GNAHOUA ELIE DANIEL JOSUÉ', 'RW', 19, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-855390-1770159016.png', 'images/players/607729.png', 'ecc2c694', 5, 4, 6, 0, 2, 2),
+  ('HAMEK MOHAMED AMINE', 'CF', 8, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-857509-1770158793.png', 'images/players/608660.png', '308cdd8b', 6, 0, 5, 3, 2, 0)
+) AS tmp(name, position, number, speed, shooting, passing, defense, stamina, pb, pr, pa, pv, ps, pag, psp, tst, tsl, tbc, td, tsp, thp, th, tsh, tv, mc, mw, mr, mdp, mop, mv, photo_url, photo_local, avatar_config_id, skin_color, hair_style, hair_color, body_type, beard_style, eye_color);
+
+-- Players for JEUNESSE SPORTIVE DE KABYLIE
+WITH t AS (SELECT id FROM teams WHERE name='JEUNESSE SPORTIVE DE KABYLIE')
+INSERT INTO players (
+  team_id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  physical_balance, physical_reaction, physical_acceleration, physical_velocity, physical_stamina,
+  physical_agility, physical_shotpower,
+  technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
+  technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
+  mental_calmness, mental_workrate, mental_resilience,
+  mental_defensivepositioning, mental_offensivepositioning, mental_vision,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+) SELECT t.id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  pb, pr, pa, pv, ps, pag, psp,
+  tst, tsl, tbc, td, tsp, thp, th, tsh, tv,
+  mc, mw, mr, mdp, mop, mv,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+FROM t, (VALUES
+  ('MERBAH GAYA', 'GK', 16, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-639570-1756764946.png', 'images/players/377484.png', 'a1868c32', 0, 4, 4, 2, 0, 1),
+  ('HADID Mohamed Idir', 'GK', 21, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-639571-1756765383.png', 'images/players/40804.png', '8d77270c', 1, 4, 7, 0, 0, 3),
+  ('BENRABAH SEIF', 'GK', 22, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-639572-1756764232.png', 'images/players/43665.png', '39034101', 1, 3, 1, 1, 3, 3),
+  ('BENATTIA OUSSAMA', 'LB', 13, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637555-1756764112.png', 'images/players/66164.png', '25214225', 2, 3, 2, 1, 3, 0),
+  ('CHERIR ABDELHAK', 'RB', 14, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637559-1756765727.png', 'images/players/68980.png', '514c9581', 4, 1, 5, 1, 1, 0),
+  ('BELAID ZINEDDINE', 'CB', 5, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-638114-1756765041.png', 'images/players/41159.png', '0d314fc7', 6, 4, 7, 3, 0, 0),
+  ('BELLAOUEL LAID CHAHINE', 'LB', 3, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-638169-1756765346.png', 'images/players/40357.png', '5f542c63', 4, 4, 4, 3, 0, 1),
+  ('HAMIDI  Mohamed reda', 'RB', 17, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-639031-1756897941.png', 'images/players/40588.png', '097d754f', 2, 0, 5, 3, 3, 1),
+  ('BENCHAA REDA MOHAMED AMINE', 'CB', 28, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-639576-1756765078.png', 'images/players/499648.png', 'eb865c82', 4, 4, 4, 2, 3, 3),
+  ('MADANI Mohamed Amine', 'LB', 20, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-639577-1756766044.png', 'images/players/40901.png', '048262ba', 4, 0, 2, 2, 2, 1),
+  ('NECHAT DJABRI FARES', 'RB', 2, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-640373-1756765463.png', 'images/players/40565.png', 'dca123c0', 3, 1, 3, 0, 3, 0),
+  ('BOTT MOSTAPHA REZKALLAH', 'CB', 4, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-641198-1756764963.png', 'images/players/65177.png', 'efd2de7f', 1, 0, 6, 3, 1, 0),
+  ('BOULKABOUL CHOUAIB', 'LB', 24, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/40546.png', 'd43ec1ed', 2, 2, 1, 1, 0, 3),
+  ('BADA JOSAPHAT ARTHUR', 'RM', 12, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-638145-1756765678.png', 'images/players/506173.png', 'b8867d0f', 2, 4, 5, 3, 2, 1),
+  ('SARR BABACAR', 'CM', 25, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-639573-1756766286.png', 'images/players/377532.png', 'c90f3d37', 5, 0, 5, 3, 1, 0),
+  ('IZEM  YOUCEF', 'LM', 15, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-640117-1756764775.png', 'images/players/76594.png', 'a8b87624', 0, 4, 6, 0, 2, 1),
+  ('MERGHEM MEHDI', 'RM', 19, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-640983-1756764146.png', 'images/players/499407.png', '0ea403b5', 0, 4, 3, 1, 2, 1),
+  ('MAHIOUS Aimen', 'CF', 18, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637372-1756766248.png', 'images/players/41077.png', '80045e84', 2, 4, 6, 0, 1, 3),
+  ('SLIMANE TICHTICH ISLAM EDDINE', 'LW', 30, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-639495-1756764276.png', 'images/players/164398.png', '2430bc62', 1, 3, 4, 2, 1, 2),
+  ('BOUDEBOUZ RYAD', 'RW', 10, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-639569-1756764861.png', 'images/players/378260.png', '69fd8c24', 0, 3, 4, 0, 1, 2),
+  ('MAMMERI AHMED', 'CF', 26, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-639574-1756766336.png', 'images/players/41070.png', 'f83559af', 3, 3, 1, 3, 0, 2),
+  ('MALKI OUALID', 'LW', 27, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-640372-1756766375.png', 'images/players/65352.png', '326cc515', 1, 3, 5, 1, 3, 0),
+  ('AKHRIB LAHLOU', 'RW', 11, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-640478-1756765649.png', 'images/players/42131.png', '084e954b', 1, 3, 5, 3, 2, 3),
+  ('MESSAOUDI  Billal', 'CF', 9, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-641050-1756765629.png', 'images/players/40306.png', '7ee385c3', 0, 2, 5, 3, 0, 1),
+  ('TEIXEIRA JAREDI LOPES', 'LW', 7, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/605273.png', 'e167d58a', 1, 3, 5, 2, 0, 2),
+  ('ECUA ECUA CELESTIN', 'RW', 29, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/607035.png', '19e8e01f', 4, 2, 0, 3, 1, 1)
+) AS tmp(name, position, number, speed, shooting, passing, defense, stamina, pb, pr, pa, pv, ps, pag, psp, tst, tsl, tbc, td, tsp, thp, th, tsh, tv, mc, mw, mr, mdp, mop, mv, photo_url, photo_local, avatar_config_id, skin_color, hair_style, hair_color, body_type, beard_style, eye_color);
+
+-- Players for JEUNESSE SPORTIVE SAOURA
+WITH t AS (SELECT id FROM teams WHERE name='JEUNESSE SPORTIVE SAOURA')
+INSERT INTO players (
+  team_id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  physical_balance, physical_reaction, physical_acceleration, physical_velocity, physical_stamina,
+  physical_agility, physical_shotpower,
+  technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
+  technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
+  mental_calmness, mental_workrate, mental_resilience,
+  mental_defensivepositioning, mental_offensivepositioning, mental_vision,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+) SELECT t.id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  pb, pr, pa, pv, ps, pag, psp,
+  tst, tsl, tbc, td, tsp, thp, th, tsh, tv,
+  mc, mw, mr, mdp, mop, mv,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+FROM t, (VALUES
+  ('SEGGARI ZAKARIA', 'GK', 16, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-635403-1756747454.png', 'images/players/52220.png', 'ca828823', 6, 0, 0, 3, 0, 1),
+  ('MERHAB MOHAMED ABDELBARIE', 'GK', 30, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636115-1757068140.png', 'images/players/47664.png', '78b3329a', 1, 4, 2, 2, 0, 0),
+  ('SALHI  ABDELKADIR', 'GK', 1, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/41219.png', 'be0239bd', 1, 2, 1, 1, 1, 0),
+  ('MATALLAH SID AHMED', 'LB', 20, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-635622-1756752371.png', 'images/players/377249.png', '384db005', 0, 2, 0, 1, 1, 1),
+  ('AKACEM RIYANE', 'RB', 2, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636220-1756746851.png', 'images/players/41151.png', 'e7cf6479', 0, 2, 4, 1, 3, 3),
+  ('BOUTICHE  ABDELKADER', 'CB', 5, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636222-1756746942.png', 'images/players/40281.png', 'aef418aa', 6, 4, 0, 2, 3, 3),
+  ('ZAALANI Nasreddine', 'LB', 13, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636224-1756747223.png', 'images/players/377228.png', '48336e37', 2, 1, 6, 3, 1, 1),
+  ('HADDOUCHE ILYES FAICAL', 'RB', 14, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636225-1756752234.png', 'images/players/42862.png', '39ea2b16', 1, 4, 3, 2, 1, 2),
+  ('BARKAT ABDENOUR', 'CB', 24, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636229-1756747903.png', 'images/players/377351.png', '1e69558e', 2, 0, 5, 2, 1, 3),
+  ('MEBARKI  Fayçal', 'LB', 4, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636232-1756746900.png', 'images/players/40417.png', '05b68c45', 5, 2, 4, 1, 3, 1),
+  ('TAHOURI  ISSAM EDDINE', 'RB', 15, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637178-1756747414.png', 'images/players/46095.png', 'df467af1', 6, 0, 2, 1, 2, 3),
+  ('MOUALI  Hamza', 'CB', 6, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/40311.png', '1aef775a', 5, 4, 7, 2, 0, 1),
+  ('WAYOU CONSTANT', 'LM', 19, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-634571-1756747610.png', 'images/players/504141.png', 'd683a123', 4, 1, 1, 3, 3, 0),
+  ('ALLAOUI KHALED MOUNIR', 'RM', 23, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636231-1756747829.png', 'images/players/44832.png', '632bf79b', 1, 3, 7, 3, 1, 1),
+  ('BADAOUI MOSTAPHA', 'CM', 27, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636315-1756748069.png', 'images/players/119671.png', 'de1a790e', 5, 1, 1, 2, 2, 2),
+  ('KHOUMANI ABDEL HAK', 'LM', 8, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-641392-1756752404.png', 'images/players/42187.png', 'd0a563b1', 5, 0, 3, 1, 3, 0),
+  ('GOUMAIDI MOHAMED', 'RM', 17, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-850836-1769608488.png', 'images/players/70548.png', 'f680c911', 1, 3, 1, 1, 1, 1),
+  ('SELMI  Housseyn', 'CM', 22, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/40894.png', '5b591133', 0, 4, 1, 3, 1, 3),
+  ('BENTALEB OUSSAMA', 'LW', 21, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636226-1756752340.png', 'images/players/237175.png', '7a8b9f30', 3, 4, 7, 0, 1, 0),
+  ('BOUCHIBA Adel', 'RW', 25, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636227-1756747952.png', 'images/players/41080.png', '886e2e0a', 3, 0, 6, 2, 2, 2),
+  ('FETTOUHI  NOUR EL ISLAM', 'CF', 10, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636722-1756747068.png', 'images/players/41188.png', '87b8e135', 2, 4, 1, 1, 0, 1),
+  ('SAADI  ISMAIL', 'LW', 11, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636723-1756747147.png', 'images/players/40313.png', 'ca30558a', 6, 3, 5, 2, 0, 2),
+  ('BEDI GUY STEPHANE', 'RW', 9, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637292-1769607894.png', 'images/players/499541.png', '144e96a7', 6, 3, 6, 3, 1, 1),
+  ('ALIMI SIKIRU ADEWALE', 'CF', 29, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-640765-1756814540.png', 'images/players/507235.png', '7272e84f', 2, 4, 0, 3, 1, 3),
+  ('AYAD LAID', 'LW', 7, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-641213-1756746650.png', 'images/players/129191.png', 'c3d37884', 6, 1, 0, 0, 2, 0),
+  ('YUSUF ANAS', 'RW', 26, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/608337.png', '06091c1b', 6, 4, 4, 3, 3, 0)
+) AS tmp(name, position, number, speed, shooting, passing, defense, stamina, pb, pr, pa, pv, ps, pag, psp, tst, tsl, tbc, td, tsp, thp, th, tsh, tv, mc, mw, mr, mdp, mop, mv, photo_url, photo_local, avatar_config_id, skin_color, hair_style, hair_color, body_type, beard_style, eye_color);
+
+-- Players for Moustekbel Baladyat Rouissat
+WITH t AS (SELECT id FROM teams WHERE name='Moustekbel Baladyat Rouissat')
+INSERT INTO players (
+  team_id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  physical_balance, physical_reaction, physical_acceleration, physical_velocity, physical_stamina,
+  physical_agility, physical_shotpower,
+  technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
+  technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
+  mental_calmness, mental_workrate, mental_resilience,
+  mental_defensivepositioning, mental_offensivepositioning, mental_vision,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+) SELECT t.id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  pb, pr, pa, pv, ps, pag, psp,
+  tst, tsl, tbc, td, tsp, thp, th, tsh, tv,
+  mc, mw, mr, mdp, mop, mv,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+FROM t, (VALUES
+  ('RAHAL DJALAL EDDINE', 'GK', 1, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634615-1760555782.png', 'images/players/41900.png', '4661a66d', 0, 2, 6, 1, 1, 1),
+  ('MAACHOU Redouane', 'GK', 16, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634706-1760556215.png', 'images/players/377220.png', 'd71b302e', 5, 2, 0, 2, 1, 3),
+  ('BEKLAL ABDELDJABR', 'GK', 30, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/5589.png', '6ef666f4', 5, 1, 6, 0, 3, 3),
+  ('ZEGHAD YACINE', 'LB', 5, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634616-1760555918.png', 'images/players/40499.png', '4c204f7d', 6, 2, 7, 1, 3, 0),
+  ('FATAWU  HAMIDU ABDUL', 'RB', 4, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-635422-1760555890.png', 'images/players/504326.png', 'a2f16108', 1, 1, 1, 0, 0, 3),
+  ('SAIKOU DJIGO', 'CB', 2, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636645-1760555845.png', 'images/players/499672.png', 'f8de46e4', 3, 2, 6, 0, 0, 3),
+  ('BOUHAKAK KHALED', 'LB', 14, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/40919.png', '6fc4d11e', 6, 1, 1, 2, 0, 0),
+  ('REBIAI Hamza', 'RB', 13, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/40935.png', 'e5b36f84', 5, 4, 7, 0, 2, 2),
+  ('MIDOUNE MESSAOUD', 'CM', 8, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-634361-1760555985.png', 'images/players/41712.png', '08fef693', 1, 4, 6, 3, 2, 0),
+  ('BELARIBI  MOHAMED ALAA EDDINE', 'LM', 17, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-634431-1760556234.png', 'images/players/40316.png', '32805db0', 1, 3, 5, 0, 2, 0),
+  ('BENSACI ABDENACER', 'RM', 10, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/44528.png', '458a7d4b', 6, 3, 5, 3, 3, 2),
+  ('BELGOURAI MOHAMED FAIZ', 'CM', 15, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-634621-1760556195.png', 'images/players/52363.png', 'f6c4d297', 1, 1, 2, 3, 0, 2),
+  ('TOUKI BADR EDDINE', 'LM', 6, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-634993-1760555940.png', 'images/players/41193.png', '84b94026', 6, 0, 0, 2, 0, 2),
+  ('TLILI MOHAMED ABDELOUAHAB', 'RM', 23, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637052-1760556339.png', 'images/players/44213.png', 'e1cd9cd2', 1, 0, 4, 2, 2, 1),
+  ('NGANDZIAMI BANDESSI JULIO  CHRISDON', 'CM', 24, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637493-1760556358.png', 'images/players/505312.png', '12fb1394', 4, 1, 3, 0, 1, 1),
+  ('BENSACI ABDELKODOUS', 'LM', 12, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-641532-1760556053.png', 'images/players/377993.png', 'c4922571', 0, 1, 5, 1, 3, 1),
+  ('ELORFI AMMAR', 'RM', 26, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/41097.png', 'd9a9e94e', 0, 4, 1, 2, 3, 2),
+  ('MARDJA NAOUFEL', 'CF', 20, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-634366-1760556295.png', 'images/players/44586.png', 'ab2afb3b', 3, 2, 3, 3, 1, 3),
+  ('BENSARI MOHAMED IHAB', 'LW', 25, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-634386-1760556397.png', 'images/players/58259.png', 'd3588ab2', 1, 3, 2, 2, 0, 1),
+  ('MERZOUGUI KHAYREDDINE', 'RW', 19, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-634415-1760556271.png', 'images/players/40877.png', '5e467b98', 3, 0, 3, 0, 2, 2),
+  ('BEN KHEIRA NADJI', 'CF', 7, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-634436-1760555961.png', 'images/players/227499.png', '1ed787d5', 2, 0, 7, 1, 1, 1),
+  ('AMRANE FAIK', 'LW', 11, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-634618-1760556033.png', 'images/players/41055.png', 'b28cbd9d', 3, 0, 5, 1, 0, 2),
+  ('DJAHDOU MOHAMED RIDHA', 'RW', 22, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-634622-1760556319.png', 'images/players/42050.png', '1bba56dc', 6, 1, 6, 0, 2, 1),
+  ('NEZLA Massinissa', 'CF', 9, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-635738-1760556006.png', 'images/players/41122.png', 'fe38432b', 2, 1, 3, 3, 3, 3),
+  ('BENSACI AHMED MORTADA', 'LW', 0, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/105885.png', 'f98c080b', 4, 0, 0, 3, 0, 0),
+  ('SIKOULA BORIS DESTAING', 'RW', 21, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/605774.png', '1967d19d', 4, 3, 1, 1, 2, 2),
+  ('KHIARI OUSSAMA', 'CF', 28, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/18192.png', 'cd4874e9', 2, 2, 4, 1, 3, 3)
+) AS tmp(name, position, number, speed, shooting, passing, defense, stamina, pb, pr, pa, pv, ps, pag, psp, tst, tsl, tbc, td, tsp, thp, th, tsh, tv, mc, mw, mr, mdp, mop, mv, photo_url, photo_local, avatar_config_id, skin_color, hair_style, hair_color, body_type, beard_style, eye_color);
+
+-- Players for Moulodia Club d'Alger
+WITH t AS (SELECT id FROM teams WHERE name='Moulodia Club d''Alger')
+INSERT INTO players (
+  team_id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  physical_balance, physical_reaction, physical_acceleration, physical_velocity, physical_stamina,
+  physical_agility, physical_shotpower,
+  technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
+  technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
+  mental_calmness, mental_workrate, mental_resilience,
+  mental_defensivepositioning, mental_offensivepositioning, mental_vision,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+) SELECT t.id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  pb, pr, pa, pv, ps, pag, psp,
+  tst, tsl, tbc, td, tsp, thp, th, tsh, tv,
+  mc, mw, mr, mdp, mop, mv,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+FROM t, (VALUES
+  ('GUENDOUZ Alexis', 'GK', 26, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636271-1757108872.png', 'images/players/41011.png', '1e06c9cb', 2, 1, 1, 3, 1, 2),
+  ('RAMDANE ABDELATIF', 'GK', 1, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-640745-1757107454.png', 'images/players/40559.png', 'a7100789', 6, 1, 7, 1, 0, 0),
+  ('BOUGUERRA  Aimen', 'CB', 25, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636717-1757108812.png', 'images/players/40309.png', '1c3641bc', 0, 4, 1, 0, 2, 2),
+  ('KHELIF  MERWANE', 'LB', 3, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-640746-1757107790.png', 'images/players/40345.png', 'c982bc4d', 5, 0, 4, 1, 3, 2),
+  ('ABDELLAOUI AYOUB', 'RB', 5, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-640747-1757107860.png', 'images/players/377224.png', 'a94b3638', 1, 0, 6, 0, 0, 3),
+  ('GHEZALA Ayoub', 'CB', 19, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-641218-1757108484.png', 'images/players/40980.png', '393f8c80', 1, 3, 4, 0, 1, 3),
+  ('HALAIMIA MED REDHA', 'LB', 20, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-641219-1757108524.png', 'images/players/377232.png', 'aa9bbe72', 2, 0, 6, 2, 2, 2),
+  ('MENEZLA ABDELKADER', 'RB', 27, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/377233.png', '0b606c63', 4, 1, 4, 3, 1, 0),
+  ('DENDAOUI ROSTOM', 'CB', 2, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-641228-1757107582.png', 'images/players/66435.png', 'c496e40b', 0, 0, 4, 3, 2, 2),
+  ('BENKHEMASSA Mohammed', 'LM', 6, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-640748-1757107946.png', 'images/players/377250.png', '463f89a3', 0, 3, 1, 3, 0, 0),
+  ('ZOUGRANA MOHAMED', 'RM', 12, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-640753-1757108267.png', 'images/players/366695.png', '66dd27d2', 4, 1, 7, 2, 2, 2),
+  ('AISSAOUI SID AHMED', 'CM', 30, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-640779-1757109080.png', 'images/players/51972.png', 'fddd434e', 1, 1, 3, 2, 2, 3),
+  ('BANGOURA ALHASSANE', 'LM', 10, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/507337.png', '7f6eb1b2', 1, 0, 1, 2, 2, 0),
+  ('BOUCHERIT MEHDI', 'RM', 15, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-641216-1757108424.png', 'images/players/40820.png', 'fd9ae485', 1, 4, 4, 1, 0, 2),
+  ('TABTI Larbi', 'CM', 21, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-641221-1757108572.png', 'images/players/40904.png', '76db6b62', 6, 4, 3, 2, 1, 3),
+  ('SIBOUS MOHAMED ISLAM', 'LM', 14, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-641230-1757108364.png', 'images/players/66418.png', 'c2c6c976', 5, 3, 1, 2, 2, 0),
+  ('BOUKHOLDA  CHAHREDDINE', 'RM', 17, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/377472.png', '49b265b0', 3, 3, 5, 0, 1, 0),
+  ('BAYAZID  SOFIANE', 'CF', 7, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-640749-1757108140.png', 'images/players/377256.png', '635cdcf2', 1, 2, 4, 2, 2, 3),
+  ('BANGOURA MOHAMED SALIOU', 'LW', 18, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/499683.png', 'ce71151a', 3, 3, 5, 2, 0, 0),
+  ('NAIDJI Zakaria', 'RW', 24, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-640752-1757108743.png', 'images/players/377282.png', 'e055eee0', 0, 0, 6, 0, 1, 3),
+  ('ZUNON KIPRE TIAGOURI EMMANUEL JUNIOR', 'CF', 22, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-641222-1757108611.png', 'images/players/377461.png', 'aa8fc4a4', 2, 3, 4, 0, 2, 2),
+  ('BENHAOUA  Oussama', 'LW', 28, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-641225-1757108936.png', 'images/players/377347.png', 'dacea427', 1, 1, 4, 3, 2, 1),
+  ('MESSOUSSA AMINE ABDEIRAHMANE BEN MALIK', 'RW', 29, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/377669.png', '86f89299', 1, 3, 2, 1, 2, 0),
+  ('HAMADOUCHE YACINE', 'CF', 13, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-641227-1757108320.png', 'images/players/63436.png', '196eed33', 4, 0, 5, 3, 3, 0),
+  ('BOUBETACHE  CHEMSEDDINE', 'LW', 23, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-641229-1757108649.png', 'images/players/55355.png', 'd0e25ca7', 5, 1, 4, 3, 2, 0),
+  ('FERHAT ZINEDINE', 'RW', 8, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-641517-1757108191.png', 'images/players/507615.png', 'bbab12af', 5, 1, 2, 3, 2, 2)
+) AS tmp(name, position, number, speed, shooting, passing, defense, stamina, pb, pr, pa, pv, ps, pag, psp, tst, tsl, tbc, td, tsp, thp, th, tsh, tv, mc, mw, mr, mdp, mop, mv, photo_url, photo_local, avatar_config_id, skin_color, hair_style, hair_color, body_type, beard_style, eye_color);
+
+-- Players for Mouloudia Club El Bayadh
+WITH t AS (SELECT id FROM teams WHERE name='Mouloudia Club El Bayadh')
+INSERT INTO players (
+  team_id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  physical_balance, physical_reaction, physical_acceleration, physical_velocity, physical_stamina,
+  physical_agility, physical_shotpower,
+  technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
+  technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
+  mental_calmness, mental_workrate, mental_resilience,
+  mental_defensivepositioning, mental_offensivepositioning, mental_vision,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+) SELECT t.id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  pb, pr, pa, pv, ps, pag, psp,
+  tst, tsl, tbc, td, tsp, thp, th, tsh, tv,
+  mc, mw, mr, mdp, mop, mv,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+FROM t, (VALUES
+  ('CHERIF MOHAMMED TAYEB', 'GK', 16, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636593-1756645871.png', 'images/players/41180.png', 'bced9f49', 6, 2, 7, 1, 2, 1),
+  ('BOUCHIKHI NABIL ABDELKADER', 'GK', 30, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636601-1756646252.png', 'images/players/64540.png', 'd42e56c0', 2, 1, 6, 0, 2, 3),
+  ('DJOUDAR ABDENASSER', 'GK', 25, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/41921.png', 'c426f1c5', 0, 3, 1, 1, 2, 0),
+  ('HADDAD ADEL', 'LB', 12, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636587-1756645775.png', 'images/players/50106.png', 'd6829cad', 4, 0, 4, 1, 0, 0),
+  ('MEROUANI  M''HAMMED', 'RB', 4, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636628-1756644268.png', 'images/players/40303.png', 'bc7c1c3f', 6, 4, 4, 3, 0, 2),
+  ('GHANEM Adel', 'CB', 5, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636630-1756644329.png', 'images/players/40879.png', '3aaadc11', 2, 0, 4, 1, 2, 0),
+  ('YEROU OUSSAMA', 'LB', 14, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637346-1756645816.png', 'images/players/43448.png', '2c39b91d', 2, 2, 1, 1, 0, 0),
+  ('BENABDA ZAHREDDINE', 'RB', 20, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637348-1756645994.png', 'images/players/42238.png', '610efd48', 6, 4, 5, 0, 2, 1),
+  ('ATALLAH ILYES', 'CB', 27, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637394-1756646162.png', 'images/players/40621.png', '8425ac17', 6, 2, 4, 3, 0, 1),
+  ('MEDDAH ABDELLAH', 'LB', 23, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-640760-1756646051.png', 'images/players/41163.png', '6a9210d0', 1, 1, 0, 0, 1, 1),
+  ('BENBRAHIM MOHAMED SABRI', 'RB', 3, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-855850-1769980625.png', 'images/players/41953.png', 'e94655a7', 2, 0, 5, 3, 0, 3),
+  ('KOUAR BELAID', 'CB', 26, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/142383.png', 'c715ff46', 3, 1, 7, 2, 3, 3),
+  ('BOUCHOUCHA MOUAT EZ BILLAH', 'LM', 28, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636599-1756646197.png', 'images/players/63147.png', '8ee86c37', 2, 2, 4, 3, 2, 3),
+  ('KENICHE  MORTADA KHIR EDDINE', 'RM', 8, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636631-1756644622.png', 'images/players/40378.png', '15d7c09f', 0, 0, 0, 3, 2, 2),
+  ('DAHAMNI  KHALID', 'CM', 10, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636632-1756645734.png', 'images/players/41148.png', '8cba7a0a', 0, 1, 2, 2, 2, 3),
+  ('KAIDI ISLAM EDDINE', 'LM', 18, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636660-1756645926.png', 'images/players/40418.png', 'df4d666f', 6, 2, 6, 3, 3, 1),
+  ('MAHBOUB  AHMED AMINE', 'RM', 21, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636888-1756646023.png', 'images/players/55402.png', '62c23f5b', 0, 4, 7, 3, 2, 3),
+  ('SENHADJI MOHAMED ES SEDDIK', 'CM', 13, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-856732-1769980689.png', 'images/players/377225.png', '92a327d3', 6, 3, 7, 3, 0, 0),
+  ('AMOKRANE ABDELHAKIM', 'LW', 9, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636575-1756645696.png', 'images/players/505326.png', 'f1fa33d7', 3, 0, 3, 3, 1, 0),
+  ('CHELALI ABDELKADER AKRAM', 'RW', 29, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636664-1756646229.png', 'images/players/63664.png', '8ca33dac', 0, 3, 5, 0, 2, 0),
+  ('BENYAHIA DHIYA EDDINE', 'CF', 24, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636666-1756646090.png', 'images/players/377293.png', 'f3311dba', 5, 4, 5, 2, 0, 3),
+  ('ADJOUT LOUANAS', 'LW', 7, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636680-1756644439.png', 'images/players/40677.png', 'e5ca7e30', 5, 2, 6, 0, 2, 2),
+  ('BELMILOUD KAMEL', 'RW', 17, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636718-1756645897.png', 'images/players/42313.png', '88671276', 3, 3, 2, 2, 1, 2),
+  ('BELKHADEM. Mohamed', 'CF', 15, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636950-1756645847.png', 'images/players/40692.png', '260c7675', 3, 2, 6, 1, 2, 1),
+  ('YAICHE Ilyes', 'LW', 22, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-851804-1769605072.png', 'images/players/377251.png', 'edec5778', 6, 1, 7, 0, 3, 1),
+  ('BARKAT ABDELILLAH', 'RW', 19, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/41033.png', 'd3c18754', 1, 3, 7, 0, 0, 1),
+  ('TAABLI HASSEN ABDELHASSIB', 'CF', 11, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-858731-1769980661.png', 'images/players/64521.png', '9809e64f', 5, 4, 6, 3, 1, 1)
+) AS tmp(name, position, number, speed, shooting, passing, defense, stamina, pb, pr, pa, pv, ps, pag, psp, tst, tsl, tbc, td, tsp, thp, th, tsh, tv, mc, mw, mr, mdp, mop, mv, photo_url, photo_local, avatar_config_id, skin_color, hair_style, hair_color, body_type, beard_style, eye_color);
+
+-- Players for MOULOUDIA CLUB ORANAIS
+WITH t AS (SELECT id FROM teams WHERE name='MOULOUDIA CLUB ORANAIS')
+INSERT INTO players (
+  team_id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  physical_balance, physical_reaction, physical_acceleration, physical_velocity, physical_stamina,
+  physical_agility, physical_shotpower,
+  technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
+  technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
+  mental_calmness, mental_workrate, mental_resilience,
+  mental_defensivepositioning, mental_offensivepositioning, mental_vision,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+) SELECT t.id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  pb, pr, pa, pv, ps, pag, psp,
+  tst, tsl, tbc, td, tsp, thp, th, tsh, tv,
+  mc, mw, mr, mdp, mop, mv,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+FROM t, (VALUES
+  ('MENDIL ANIS MAHDI', 'GK', 30, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634697-1757637382.png', 'images/players/66130.png', 'f102f000', 3, 2, 0, 0, 0, 3),
+  ('FERRAHI  Mokhtar', 'GK', 16, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-641380-1757636989.png', 'images/players/40291.png', '89e8aef7', 4, 2, 6, 3, 1, 0),
+  ('ZEGHBA MOUSTAFA', 'GK', 1, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/377622.png', '42a58194', 3, 0, 1, 0, 3, 2),
+  ('HAMRA Abderrahim', 'LB', 23, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634684-1757637212.png', 'images/players/41071.png', '8292d342', 4, 1, 3, 2, 2, 2),
+  ('BELKHITHER Mokhtar', 'RB', 20, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-635555-1757637080.png', 'images/players/40860.png', '4aef11af', 4, 4, 1, 3, 2, 0),
+  ('KADDOUR OUSSAMA SAFA', 'CB', 12, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-635835-1757636889.png', 'images/players/41066.png', 'b3899f06', 4, 2, 7, 2, 3, 0),
+  ('MAAMAR CHAOUCHE  ABDELKARIM', 'LB', 3, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636233-1757636600.png', 'images/players/377463.png', '8a0120e8', 5, 1, 0, 0, 2, 3),
+  ('BELHARRANE ABDELKADER ALAA EDDINE', 'RB', 22, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636240-1757637181.png', 'images/players/40416.png', 'cc1c52a0', 1, 3, 2, 0, 0, 0),
+  ('kerroum ahmed', 'CB', 24, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636243-1757637239.png', 'images/players/40401.png', 'b2573ec3', 3, 2, 6, 3, 3, 3),
+  ('HACHOUD IBRAHIM', 'LB', 5, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-641340-1757636670.png', 'images/players/41199.png', '60d9986b', 5, 2, 0, 3, 0, 0),
+  ('GUESSOUM KELYAN JEAN SAID', 'RB', 2, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/377466.png', '5ed824de', 3, 1, 4, 2, 0, 3),
+  ('AOUDJANE CHAKIB', 'CM', 17, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-634685-1757637019.png', 'images/players/42134.png', 'f2ccd665', 4, 4, 6, 1, 2, 1),
+  ('MAHADANE  MOUNIR EL MEHDI', 'LM', 29, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-634698-1757637348.png', 'images/players/55383.png', 'cb769361', 0, 3, 3, 1, 3, 0),
+  ('MOHUTSIWA GAPE EDWIN', 'RM', 15, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-635420-1757636958.png', 'images/players/377222.png', '1f61d56d', 3, 2, 5, 1, 2, 0),
+  ('FATMI OUSSAMA', 'CM', 25, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-635556-1757637269.png', 'images/players/69436.png', 'f8b3a19f', 3, 4, 1, 3, 3, 0),
+  ('AGUIEB JUBA', 'LM', 8, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636235-1757636757.png', 'images/players/41013.png', 'dd33ada3', 4, 1, 5, 3, 3, 1),
+  ('BOURDIM Abderrahmane', 'RM', 4, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636236-1757636633.png', 'images/players/40941.png', '1a9951c7', 5, 3, 1, 3, 1, 0),
+  ('EMBAREK OMAR', 'CM', 6, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636283-1757636697.png', 'images/players/377271.png', '7b74d9d3', 4, 1, 1, 3, 0, 1),
+  ('COUMBASSA OUSMANE KOKOE', 'LM', 14, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/604847.png', 'e3c69e81', 3, 3, 6, 1, 1, 2),
+  ('BENKHEDIM BILAL YAHYA', 'RM', 10, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/605096.png', '9533788b', 2, 1, 0, 3, 1, 2),
+  ('GOUDJIL YACINE', 'CF', 9, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-634683-1757636785.png', 'images/players/66305.png', 'ca94d225', 6, 3, 2, 1, 2, 0),
+  ('MOULEY ABDELAZIZ ABDELKADER', 'LW', 21, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636242-1757637111.png', 'images/players/41797.png', '9c552ecf', 2, 0, 6, 3, 2, 1),
+  ('ALIANE Yacine', 'RW', 27, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636244-1757637292.png', 'images/players/41141.png', '9ac26e60', 0, 4, 6, 0, 3, 0),
+  ('MILOUDI  ILYES', 'CF', 19, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-641407-1757637056.png', 'images/players/69571.png', '28a80e48', 5, 3, 6, 0, 3, 1),
+  ('TRAORE BOUBACAR', 'LW', 11, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/607131.png', '9e1abf32', 4, 1, 7, 2, 0, 3),
+  ('BANGOURA SEKOU DAMARO', 'RW', 7, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/608919.png', 'f152ff6d', 3, 2, 7, 1, 2, 0)
+) AS tmp(name, position, number, speed, shooting, passing, defense, stamina, pb, pr, pa, pv, ps, pag, psp, tst, tsl, tbc, td, tsp, thp, th, tsh, tv, mc, mw, mr, mdp, mop, mv, photo_url, photo_local, avatar_config_id, skin_color, hair_style, hair_color, body_type, beard_style, eye_color);
+
+-- Players for Olympique Akbou
+WITH t AS (SELECT id FROM teams WHERE name='Olympique Akbou')
+INSERT INTO players (
+  team_id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  physical_balance, physical_reaction, physical_acceleration, physical_velocity, physical_stamina,
+  physical_agility, physical_shotpower,
+  technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
+  technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
+  mental_calmness, mental_workrate, mental_resilience,
+  mental_defensivepositioning, mental_offensivepositioning, mental_vision,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+) SELECT t.id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  pb, pr, pa, pv, ps, pag, psp,
+  tst, tsl, tbc, td, tsp, thp, th, tsh, tv,
+  mc, mw, mr, mdp, mop, mv,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+FROM t, (VALUES
+  ('ALILI AHMED', 'GK', 1, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634311-1756833577.png', 'images/players/42253.png', '10713e77', 2, 3, 6, 3, 2, 1),
+  ('KLILECHE BENAOUDA', 'GK', 16, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636421-1756833319.png', 'images/players/41908.png', '7ad0bd68', 3, 3, 5, 0, 1, 2),
+  ('YESLI RAYANE YUBA', 'GK', 13, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/603834.png', 'ef17d489', 1, 3, 4, 1, 1, 1),
+  ('BENCHRIFA MOHAMED WALID', 'LB', 21, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-633587-1756833071.png', 'images/players/503987.png', '1e046c91', 2, 4, 4, 1, 2, 3),
+  ('SABRI  MOHAMED ABDERAHMANE', 'RB', 15, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634374-1756833218.png', 'images/players/66675.png', '04ed2c0e', 4, 2, 4, 2, 1, 3),
+  ('ALLA AHMED', 'CB', 22, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636148-1756833041.png', 'images/players/48088.png', 'fae0c4fd', 5, 4, 4, 1, 0, 2),
+  ('BOUKARROUM Billal', 'LB', 17, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636419-1756833278.png', 'images/players/40899.png', '682642e6', 6, 3, 2, 2, 3, 3),
+  ('BOUTELDJA  SLIMANE', 'RB', 5, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636422-1757931947.png', 'images/players/41987.png', 'f4915196', 6, 0, 1, 2, 1, 0),
+  ('CHELFAOUI MOHAMMED YASSER', 'CB', 24, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636425-1756832774.png', 'images/players/41915.png', '98096f03', 5, 4, 7, 3, 2, 0),
+  ('MEKIDECHE  NASSIM', 'LB', 3, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/604050.png', '55f1bc9f', 1, 1, 4, 3, 2, 3),
+  ('FRIDHAR IMAME ABDELMOUNAIM', 'RM', 27, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-634189-1756832809.png', 'images/players/80374.png', '12f4769c', 4, 4, 6, 0, 1, 3),
+  ('BERRABAH MOHAMED NADJIB', 'CM', 14, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-634328-1756833160.png', 'images/players/237552.png', 'a5ba0095', 4, 1, 0, 1, 3, 2),
+  ('AMRICHE ALI', 'LM', 4, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-634658-1756833615.png', 'images/players/41101.png', 'e56497ff', 5, 0, 7, 3, 3, 0),
+  ('BELGACEM  GHILAS', 'RM', 26, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636332-1756832671.png', 'images/players/72964.png', 'f7737ddf', 2, 0, 5, 3, 1, 0),
+  ('ADDADI Toufik', 'CM', 20, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636413-1756832953.png', 'images/players/377221.png', 'fd22db7b', 1, 4, 3, 3, 1, 1),
+  ('MESSIAD HICHAM', 'LM', 18, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636415-1756833124.png', 'images/players/41165.png', '57094dec', 3, 4, 5, 0, 3, 0),
+  ('MEHDAOUI MEROUANE', 'RM', 23, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636423-1756832737.png', 'images/players/42179.png', '7a5ad000', 3, 0, 0, 0, 0, 0),
+  ('ZIDI LOUANES', 'CM', 6, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636424-1756833655.png', 'images/players/42456.png', '5746f45d', 3, 0, 4, 1, 2, 1),
+  ('BENSAADALLAH  DHIRAR', 'LM', 8, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636426-1756833378.png', 'images/players/377498.png', 'f6ee46c4', 1, 3, 6, 0, 3, 3),
+  ('HAMROUNE REZKI', 'RM', 11, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-639068-1756833469.png', 'images/players/377668.png', '406b5523', 1, 2, 5, 3, 1, 0),
+  ('SEDIRI M''HEND', 'CF', 12, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-634975-1756833247.png', 'images/players/42627.png', 'bb45ba3a', 5, 4, 2, 2, 3, 1),
+  ('HITALA RAMDANE', 'LW', 7, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-635173-1756833423.png', 'images/players/40977.png', '0d8f194a', 6, 3, 1, 2, 0, 1),
+  ('GHERBI MOHAMED AMINE', 'RW', 9, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636417-1756833490.png', 'images/players/42567.png', '7e4aa104', 0, 4, 1, 0, 3, 2),
+  ('ZAMOUM  WALID', 'CF', 10, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636420-1756833355.png', 'images/players/377231.png', 'a247f1c4', 1, 1, 1, 0, 2, 3),
+  ('SISSOKO ALY DESSE', 'LW', 29, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636563-1756832866.png', 'images/players/505233.png', '214bd459', 5, 0, 4, 1, 2, 0),
+  ('ABIDI HAMDI', 'RW', 28, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/603837.png', 'd98858d8', 0, 1, 0, 0, 0, 0),
+  ('DARFALOU Oussama', 'CF', 25, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/377254.png', '668cc0bb', 4, 0, 0, 3, 1, 2)
+) AS tmp(name, position, number, speed, shooting, passing, defense, stamina, pb, pr, pa, pv, ps, pag, psp, tst, tsl, tbc, td, tsp, thp, th, tsh, tv, mc, mw, mr, mdp, mop, mv, photo_url, photo_local, avatar_config_id, skin_color, hair_style, hair_color, body_type, beard_style, eye_color);
+
+-- Players for Paradou Athletic Club
+WITH t AS (SELECT id FROM teams WHERE name='Paradou Athletic Club')
+INSERT INTO players (
+  team_id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  physical_balance, physical_reaction, physical_acceleration, physical_velocity, physical_stamina,
+  physical_agility, physical_shotpower,
+  technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
+  technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
+  mental_calmness, mental_workrate, mental_resilience,
+  mental_defensivepositioning, mental_offensivepositioning, mental_vision,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+) SELECT t.id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  pb, pr, pa, pv, ps, pag, psp,
+  tst, tsl, tbc, td, tsp, thp, th, tsh, tv,
+  mc, mw, mr, mdp, mop, mv,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+FROM t, (VALUES
+  ('ABDELKADER AHMED', 'GK', 30, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637319-1757431006.png', 'images/players/41157.png', '8a3e1362', 5, 2, 3, 2, 1, 3),
+  ('MOUSSAOUI Toufik', 'GK', 16, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-641475-1757429604.png', 'images/players/40649.png', '42a2c395', 3, 2, 3, 1, 0, 0),
+  ('SALEM HAMZA', 'CB', 6, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637249-1757429205.png', 'images/players/41092.png', '86fc7282', 1, 2, 2, 2, 3, 2),
+  ('KERMICHE FOUAD', 'LB', 24, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/41674.png', 'cf8a9bf2', 4, 3, 3, 2, 3, 3),
+  ('BOUZAHZAH  OUANISSE', 'RB', 5, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637326-1757429176.png', 'images/players/377343.png', '1539c158', 0, 2, 1, 0, 0, 0),
+  ('ZAOUI SALAH EDDINE', 'CB', 12, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637335-1757429385.png', 'images/players/42105.png', '23f25a77', 0, 2, 2, 3, 0, 1),
+  ('REGUIEG MOHAMMED IMED', 'LB', 23, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637357-1757430630.png', 'images/players/40796.png', 'ec8b4a83', 5, 4, 2, 3, 2, 2),
+  ('BEN HAMED YASSINE', 'RB', 28, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/608915.png', 'aa117b4e', 2, 2, 3, 2, 3, 2),
+  ('AIT EL HADJ MOHAMED', 'CM', 9, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637310-1757429317.png', 'images/players/40757.png', '7cb4cdcf', 5, 0, 5, 3, 0, 2),
+  ('TAHRI Abdeldjalil', 'LM', 18, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637314-1757429901.png', 'images/players/41090.png', '64b62ba3', 2, 2, 3, 3, 1, 3),
+  ('BISKER Moncef', 'RM', 17, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/377305.png', 'dd0f9289', 4, 0, 2, 1, 1, 3),
+  ('TAHAR Taha Yassine', 'CM', 26, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/40427.png', 'fbc3a6cb', 6, 0, 6, 3, 3, 3),
+  ('TAHAR MOHAMED LAMINE', 'LM', 19, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637323-1757430008.png', 'images/players/42154.png', '1017042f', 2, 3, 4, 3, 1, 0),
+  ('ABDELKADER MOHAMED ISLAM', 'RM', 8, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637324-1757429298.png', 'images/players/42151.png', 'e586ad71', 5, 4, 5, 1, 1, 0),
+  ('ZABAIOU  DJAFAR', 'CM', 27, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637329-1757430417.png', 'images/players/55424.png', '636f32c6', 1, 1, 2, 2, 2, 3),
+  ('BOUDERKA MOHAMED NAZIM AZOUAOU', 'LM', 3, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637332-1757429154.png', 'images/players/55462.png', '4fe8a397', 2, 2, 3, 3, 1, 1),
+  ('RAFANOMEZANTSOA  NOMENA LALAINA', 'RM', 25, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/507612.png', '23d16891', 0, 4, 0, 1, 2, 2),
+  ('OUATTARA ABDOUL FATAHOU', 'CM', 14, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/images/default-person.png', 'images/players/608971.png', '95f71cd8', 2, 2, 4, 0, 1, 2),
+  ('SOUKKOU Mustapha djabril', 'LW', 11, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637315-1757429366.png', 'images/players/377313.png', '9ce4543b', 2, 3, 4, 3, 1, 3),
+  ('BENDOUMA ABDELLAH', 'RW', 22, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637316-1757430518.png', 'images/players/377226.png', 'e44e8c17', 4, 3, 4, 3, 1, 2),
+  ('RAMDAOUI MOHAMMED EL AMINE', 'CF', 15, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637322-1757429575.png', 'images/players/42252.png', 'fe2ee124', 2, 1, 1, 0, 1, 0),
+  ('LAHMER SID AHMED', 'LW', 20, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637327-1757430343.png', 'images/players/74642.png', '2b5e1a52', 1, 4, 2, 2, 3, 0),
+  ('KOHILI BEN AHMED', 'RW', 7, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637331-1757429245.png', 'images/players/55447.png', 'e2f8bab9', 2, 3, 2, 1, 2, 0),
+  ('BACHA ABDERRAHMANE', 'CF', 29, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-639497-1757430987.png', 'images/players/377227.png', 'd6faacc1', 4, 0, 4, 1, 3, 3)
+) AS tmp(name, position, number, speed, shooting, passing, defense, stamina, pb, pr, pa, pv, ps, pag, psp, tst, tsl, tbc, td, tsp, thp, th, tsh, tv, mc, mw, mr, mdp, mop, mv, photo_url, photo_local, avatar_config_id, skin_color, hair_style, hair_color, body_type, beard_style, eye_color);
+
+-- Players for SSPA UNION SPORTIVE MADINET D'ALGER
+WITH t AS (SELECT id FROM teams WHERE name='SSPA UNION SPORTIVE MADINET D''ALGER')
+INSERT INTO players (
+  team_id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  physical_balance, physical_reaction, physical_acceleration, physical_velocity, physical_stamina,
+  physical_agility, physical_shotpower,
+  technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
+  technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
+  mental_calmness, mental_workrate, mental_resilience,
+  mental_defensivepositioning, mental_offensivepositioning, mental_vision,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+) SELECT t.id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  pb, pr, pa, pv, ps, pag, psp,
+  tst, tsl, tbc, td, tsp, thp, th, tsh, tv,
+  mc, mw, mr, mdp, mop, mv,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+FROM t, (VALUES
+  ('SIFOUR ABDELMOUMENE', 'GK', 1, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636427-1758119219.png', 'images/players/41104.png', '0978e369', 2, 0, 3, 1, 0, 1),
+  ('SOUFI  Kamel', 'GK', 16, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636431-1758120016.png', 'images/players/40282.png', '8b24fc31', 6, 1, 4, 1, 3, 3),
+  ('BENBOT Oussama', 'GK', 25, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/40921.png', '470687a9', 1, 1, 7, 1, 3, 1),
+  ('DEHIRI Hocine', 'LB', 13, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634797-1758119883.png', 'images/players/40429.png', 'c88b61e5', 4, 4, 1, 1, 1, 1),
+  ('CHE MALONE FONDOH JUNIOR', 'RB', 4, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634852-1758119384.png', 'images/players/504446.png', '2d725dcc', 3, 4, 5, 0, 1, 0),
+  ('ATMANIA SAFI EDDINE', 'CB', 3, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636428-1758119318.png', 'images/players/53207.png', 'ff0002e2', 3, 0, 2, 2, 2, 3),
+  ('KOURDI WALID', 'LB', 2, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636437-1758119271.png', 'images/players/68884.png', '1c94ce18', 0, 3, 6, 0, 3, 2),
+  ('RADOUANI Saadi', 'RB', 19, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636442-1758120161.png', 'images/players/40983.png', 'e1c55ffd', 1, 2, 7, 1, 0, 0),
+  ('CHETI ILYES', 'CB', 23, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636444-1758120405.png', 'images/players/377459.png', 'ae5796c9', 6, 2, 6, 1, 0, 0),
+  ('MAHROUZ RAYANE ABDELMADJID', 'LB', 20, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-639561-1758120207.png', 'images/players/52077.png', 'dca420b6', 3, 4, 0, 2, 2, 0),
+  ('LOUCIF  Haithem', 'RB', 12, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-639563-1758119807.png', 'images/players/40290.png', '8d62e4e8', 1, 3, 4, 0, 1, 1),
+  ('AZZI. IMAD EDDINE', 'CB', 5, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/377676.png', 'd03d982c', 5, 1, 0, 0, 3, 2),
+  ('ABADA Achref', 'LB', 28, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/41177.png', 'd0049135', 5, 4, 1, 1, 0, 1),
+  ('DRAOUI ZAKARIA', 'RM', 6, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-635070-1758119419.png', 'images/players/40928.png', 'eae2232c', 3, 1, 3, 0, 0, 2),
+  ('MERILI ISLAM', 'CM', 8, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636429-1758119611.png', 'images/players/41114.png', 'eb5b1f5a', 4, 1, 7, 2, 1, 2),
+  ('BOULARAS OMAR', 'LM', 26, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637269-1758120715.png', 'images/players/53891.png', '1cf660e6', 0, 1, 0, 2, 1, 2),
+  ('BENZAZA BRAHIM', 'RM', 14, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-639562-1758119920.png', 'images/players/41064.png', '0e8fba4f', 0, 3, 2, 3, 0, 0),
+  ('TENDENG ETANE JUNIOR AIME', 'CM', 30, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-641081-1758120909.png', 'images/players/507223.png', '3e4b4d2a', 6, 0, 5, 2, 2, 0),
+  ('BOUDERBALA MOHAMED', 'LW', 24, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-634289-1758120462.png', 'images/players/64817.png', '437ad4d0', 4, 2, 4, 0, 2, 2),
+  ('GHACHA HOUSSAM EDDINE', 'RW', 27, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636433-1758120805.png', 'images/players/377487.png', 'ca976a3c', 6, 1, 2, 0, 0, 0),
+  ('KHALDI AHMED', 'CF', 7, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636434-1758119548.png', 'images/players/41117.png', '717bc0d0', 1, 3, 0, 0, 3, 3),
+  ('BOUTAOUI  MONCIF ABDERRAHMANE', 'LW', 22, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636440-1758120284.png', 'images/players/115685.png', '8c9df083', 0, 2, 0, 3, 2, 1),
+  ('BENAYAD  RIAD', 'RW', 9, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-639565-1758119650.png', 'images/players/40289.png', 'f7599e85', 2, 4, 6, 1, 3, 0),
+  ('LIKONZA ADANGO  GLODY', 'CF', 11, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-639566-1758119763.png', 'images/players/377559.png', '5d7829c9', 2, 0, 1, 1, 3, 3),
+  ('KAMAGATE DRAMANE', 'LW', 29, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/601551.png', '10035614', 2, 3, 6, 0, 3, 3)
+) AS tmp(name, position, number, speed, shooting, passing, defense, stamina, pb, pr, pa, pv, ps, pag, psp, tst, tsl, tbc, td, tsp, thp, th, tsh, tv, mc, mw, mr, mdp, mop, mv, photo_url, photo_local, avatar_config_id, skin_color, hair_style, hair_color, body_type, beard_style, eye_color);
+
+-- Players for Union Sportive Madinet Khenchela
+WITH t AS (SELECT id FROM teams WHERE name='Union Sportive Madinet Khenchela')
+INSERT INTO players (
+  team_id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  physical_balance, physical_reaction, physical_acceleration, physical_velocity, physical_stamina,
+  physical_agility, physical_shotpower,
+  technical_standingtackle, technical_slidingtackle, technical_ballcontrol, technical_dribble,
+  technical_shortpass, technical_highpass, technical_header, technical_shot, technical_volley,
+  mental_calmness, mental_workrate, mental_resilience,
+  mental_defensivepositioning, mental_offensivepositioning, mental_vision,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+) SELECT t.id, name, position, number,
+  speed, shooting, passing, defense, stamina,
+  pb, pr, pa, pv, ps, pag, psp,
+  tst, tsl, tbc, td, tsp, thp, th, tsh, tv,
+  mc, mw, mr, mdp, mop, mv,
+  photo_url, photo_local, avatar_config_id,
+  skin_color, hair_style, hair_color, body_type, beard_style, eye_color
+FROM t, (VALUES
+  ('MORCELY ABDELKADER', 'GK', 1, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634227-1759540045.png', 'images/players/377252.png', '94e1b111', 1, 0, 1, 1, 2, 2),
+  ('ZITOUNI  YASSER', 'GK', 30, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634717-1759540088.png', 'images/players/51916.png', '84f1916a', 6, 1, 1, 2, 0, 0),
+  ('LITIM Oussama', 'GK', 16, 0.7, 0.4, 0.6, 0.85, 0.82, 0.75, 0.82, 0.72, 0.7, 0.82, 0.7, 0.6, 0.85, 0.6, 0.55, 0.45, 0.6, 0.55, 0.5, 0.4, 0.3, 0.85, 0.8, 0.88, 0.9, 0.2, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637428-1759540156.png', 'images/players/40455.png', 'c049981e', 3, 3, 0, 2, 0, 0),
+  ('GUEMROUD Mohamed Abdelali', 'LB', 22, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-634712-1757781368.png', 'images/players/40955.png', 'aef00ee1', 6, 0, 6, 1, 3, 1),
+  ('BADJO SERGE ANTHONY', 'RB', 4, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636464-1757617720.png', 'images/players/377854.png', 'ed79e044', 6, 1, 0, 0, 2, 1),
+  ('MEDDOUR ZIN EDDINE', 'CB', 12, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-636753-1757616534.png', 'images/players/75461.png', 'e5f05d19', 5, 0, 5, 1, 3, 2),
+  ('SOUYAD Bedr Eddine', 'LB', 5, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637352-1757617749.png', 'images/players/40988.png', '6c1f5e42', 3, 1, 6, 2, 1, 0),
+  ('DRIS ABDELHAMID', 'RB', 19, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-637484-1757616661.png', 'images/players/40721.png', 'cd8dccab', 2, 1, 4, 3, 0, 3),
+  ('GUERROUDJA WAEL', 'CB', 3, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/licence-photo/photo-pro-639206-1757617693.png', 'images/players/53994.png', '11448ab6', 3, 3, 2, 2, 3, 0),
+  ('LAMARA Nabil', 'LB', 15, 0.74, 0.5, 0.65, 0.82, 0.8, 0.8, 0.76, 0.7, 0.74, 0.8, 0.68, 0.7, 0.82, 0.78, 0.65, 0.52, 0.68, 0.62, 0.72, 0.5, 0.4, 0.76, 0.8, 0.82, 0.85, 0.5, 0.7, 'https://lfp.dz/images/default-person.png', 'images/players/377273.png', '1327bfcc', 5, 4, 7, 0, 2, 2),
+  ('SAMEUR  ABDELHAKIM', 'RM', 8, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-636729-1757617789.png', 'images/players/193496.png', '11979920', 3, 1, 1, 0, 2, 0),
+  ('ZENASNI Ahmida', 'CM', 6, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637406-1757781278.png', 'images/players/40909.png', 'a69f8029', 5, 4, 0, 1, 3, 3),
+  ('BAKIR  Mohamed islam', 'LM', 11, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637427-1757615005.png', 'images/players/40285.png', '1bfd432b', 6, 3, 3, 3, 3, 0),
+  ('BOUMECHRA Mohammed Reda', 'RM', 26, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-637430-1757617961.png', 'images/players/41068.png', '3a65b242', 2, 1, 2, 2, 0, 1),
+  ('CHEKAL  AFFARI HADJI', 'CM', 7, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-638268-1757714100.png', 'images/players/377306.png', '7271815d', 2, 3, 1, 1, 2, 1),
+  ('BENDAOUD Aymen Abdeldjalil', 'LM', 25, 0.78, 0.68, 0.82, 0.68, 0.84, 0.75, 0.8, 0.76, 0.78, 0.84, 0.76, 0.7, 0.7, 0.65, 0.82, 0.72, 0.84, 0.78, 0.64, 0.68, 0.52, 0.82, 0.84, 0.8, 0.72, 0.7, 0.84, 'https://lfp.dz/licence-photo/photo-pro-641456-1757714138.png', 'images/players/40590.png', '8718a3da', 2, 4, 3, 2, 3, 0),
+  ('ETOUGA MBELLA FRANK  THIERRY', 'RW', 21, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-634713-1759539985.png', 'images/players/504216.png', '13d2d2c4', 5, 0, 2, 0, 0, 3),
+  ('ESSANG-MATOUTI  Edlin Randy', 'CF', 23, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-634714-1757618412.png', 'images/players/377267.png', '44385d66', 5, 1, 5, 2, 2, 0),
+  ('KABOUCHE AYOUB', 'LW', 17, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-636755-1757617885.png', 'images/players/72256.png', 'a1f3449d', 0, 3, 4, 1, 3, 0),
+  ('OUKIL AMMAR ABDELMALEK', 'RW', 10, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637407-1757617817.png', 'images/players/41027.png', '7abde2f6', 3, 4, 2, 2, 1, 3),
+  ('DJAOUCHI  HAMID', 'CF', 27, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/licence-photo/photo-pro-637429-1757616827.png', 'images/players/377518.png', 'b8c97c91', 2, 1, 4, 1, 3, 1),
+  ('ASKAR ABDELHAK', 'LW', 9, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/377462.png', 'd7ee9a11', 5, 3, 2, 1, 2, 1),
+  ('BOUSSOUF TALAL', 'RW', 20, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/367335.png', '83bab80b', 5, 1, 0, 3, 2, 3),
+  ('AICHOUCHE ADEM ABDERRAHMANE', 'CF', 24, 0.86, 0.84, 0.74, 0.44, 0.75, 0.72, 0.84, 0.86, 0.86, 0.75, 0.88, 0.8, 0.44, 0.4, 0.82, 0.84, 0.74, 0.68, 0.75, 0.82, 0.68, 0.78, 0.78, 0.76, 0.48, 0.84, 0.78, 'https://lfp.dz/images/default-person.png', 'images/players/62782.png', '09d6647c', 2, 4, 4, 0, 0, 3)
+) AS tmp(name, position, number, speed, shooting, passing, defense, stamina, pb, pr, pa, pv, ps, pag, psp, tst, tsl, tbc, td, tsp, thp, th, tsh, tv, mc, mw, mr, mdp, mop, mv, photo_url, photo_local, avatar_config_id, skin_color, hair_style, hair_color, body_type, beard_style, eye_color);

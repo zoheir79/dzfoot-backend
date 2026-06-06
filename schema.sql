@@ -76,7 +76,17 @@ CREATE TABLE players (
     mental_defensivepositioning FLOAT DEFAULT 0.65,
     mental_offensivepositioning FLOAT DEFAULT 0.65,
     mental_vision               FLOAT DEFAULT 0.70,
-    model_ref   TEXT
+    model_ref   TEXT,
+    -- Avatar & Photo (deterministic from player name hash)
+    photo_url           TEXT,
+    photo_local         TEXT,
+    avatar_config_id    VARCHAR(16),  -- deterministic hex hash (e.g. '4b2f9c1a')
+    skin_color          INT DEFAULT 3,   -- 0..6 (7 teintes)
+    hair_style          INT DEFAULT 0,   -- 0..4 (short, long, mohawk, curly, bald)
+    hair_color          INT DEFAULT 0,   -- 0..7 (black, brown, blonde, red, gray, white, dark_brown, auburn)
+    body_type           INT DEFAULT 1,   -- 0..3 (thin, average, muscular, heavy)
+    beard_style         INT DEFAULT 0,   -- 0..3 (none, stubble, short, full)
+    eye_color           INT DEFAULT 0    -- 0..3 (brown, blue, green, hazel)
 );
 
 -- matches
