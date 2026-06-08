@@ -105,6 +105,7 @@ services:
 
   admin:
     image: djdreamer79/dzfoot-backend-admin:latest
+    build: ./admin
     ports:
       - "8006:8000"
     environment:
