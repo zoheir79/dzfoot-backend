@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Matchs – DZFoot Admin{% endblock %}
+{% block page_title %}Matchs{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <div class="search-row">
+    <h2 style="font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);">Liste des matchs joues</h2>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Joueur A</th>
+        <th>Equipe A</th>
+        <th>Score</th>
+        <th>Equipe B</th>
+        <th>Joueur B</th>
+        <th>Duree (s)</th>
+        <th>Date</th>
+        <th style="text-align:right;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in matches %}
+      <tr>
+        <td>{{ m.player_a_name or '-' }}</td>
+        <td>{{ m.team_a_name or '-' }}</td>
+        <td><span class="score-box">{{ m.score_a }} <span class="sep">-</span> {{ m.score_b }}</span></td>
+        <td>{{ m.team_b_name or '-' }}</td>
+        <td>{{ m.player_b_name or '-' }}</td>
+        <td>{{ m.duration_s or '-' }}</td>
+        <td>{{ m.played_at.strftime('%d/%m/%Y %H:%M') if m.played_at else '-' }}</td>
+        <td style="text-align:right;">
+          <form method="post" action="/matches/{{ m.id }}/delete" style="display:inline;" onsubmit="return confirm('Supprimer ce match ?');">
+            <button type="submit" class="btn btn-danger" style="padding:4px 10px;font-size:12px;">Supprimer</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" style="text-align:center;color:var(--text-muted);">Aucun match</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

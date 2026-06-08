@@ -44,6 +44,7 @@ os.makedirs(CONFIG_DIR, exist_ok=True)
 redis: Optional[aioredis.Redis] = None
 lkapi: Optional[LiveKitAPI] = None
 active_matches: dict = {}
+room_publishers: dict = {}   # room_id -> livekit.rtc.Room (for data publishing)
 _background_tasks: list = []  # Strong references to prevent GC
 
 
@@ -126,18 +127,17 @@ async def _binary_pubsub_relay(redis_channel: str, lk_topic: str, kind):
                             # Orphan match (not in active_matches) — skip silently
                             continue
                     try:
-                        if SendDataRequest is None:
-                            print(f"[Relay {redis_channel}] SendDataRequest is None — cannot forward", flush=True)
+                        pub_room = room_publishers.get(room_id)
+                        if pub_room is None:
+                            print(f"[Relay {redis_channel}] No Room publisher for {room_id}, skipping", flush=True)
                             continue
-                        req = SendDataRequest(
-                            room=room_id,
-                            data=payload,
-                            kind=kind,
+                        await pub_room.local_participant.publish_data(
+                            payload,
+                            reliable=(kind == DataPacketKind.KIND_RELIABLE),
                             topic=lk_topic,
                         )
-                        await lkapi.room.send_data(req)
                     except Exception as e:
-                        print(f"[Relay {redis_channel}] send_data error for room {room_id}: {e}", flush=True)
+                        print(f"[Relay {redis_channel}] publish_data error for room {room_id}: {e}", flush=True)
             finally:
                 await ps.close()
         except Exception as e:
@@ -169,9 +169,9 @@ async def _bot_relay_for_room(room_id: str):
             VideoGrants(
                 room_join=True,
                 room=room_id,
-                can_publish=False,
+                can_publish=True,
                 can_subscribe=True,
-                can_publish_data=False,
+                can_publish_data=True,
             )
         )
         .with_identity(f"bot-{room_id}")
@@ -204,7 +204,8 @@ async def _bot_relay_for_room(room_id: str):
                 print(f"[Bot {room_id}] participant_disconnected error: {e}", flush=True)
 
         await room.connect(LK_URL, bot_token)
-        print(f"[Bot {room_id}] Connected to room for input relay")
+        room_publishers[room_id] = room
+        print(f"[Bot {room_id}] Connected to room for input relay + data publishing")
 
         # Keep the bot alive until the room is gone
         while room_id in active_matches:
@@ -212,6 +213,7 @@ async def _bot_relay_for_room(room_id: str):
     except Exception as e:
         print(f"[Bot {room_id}] Error: {e}", flush=True)
     finally:
+        room_publishers.pop(room_id, None)
         await room.disconnect()
         print(f"[Bot {room_id}] Disconnected")
 
@@ -223,6 +225,7 @@ async def _cleanup_orphan_match(room_id: str):
         print(f"[Session] Cleaning up orphan match {room_id} (no player after 10s)", flush=True)
         await redis.publish("gf.crashed", room_id)
         active_matches.pop(room_id, None)
+        room_publishers.pop(room_id, None)
         await redis.delete(f"room:{room_id}")
 
 
@@ -256,6 +259,7 @@ async def _handle_gf_crashed(room_id):
 async def _cleanup_after_crash(room_id):
     await asyncio.sleep(60)
     active_matches.pop(room_id, None)
+    room_publishers.pop(room_id, None)
     await redis.delete(f"room:{room_id}")
 
 
@@ -266,6 +270,7 @@ async def _handle_gf_finished(room_id):
         active_matches[room_id]["finished_at"] = datetime.utcnow().isoformat()
         await redis.publish("match.finished", room_id)
         active_matches.pop(room_id, None)
+        room_publishers.pop(room_id, None)
         await redis.delete(f"room:{room_id}")
 
 
@@ -306,12 +311,17 @@ async def check_match_timeouts():
 
 class CreateMatchRequest(BaseModel):
     player_a: str
-    player_b: str
+    player_b: Optional[str] = None  # not known yet for PvP waiting matches
     team_a: Optional[str] = None
     team_b: Optional[str] = None
     stadium_id: Optional[str] = None
     duration: int = 600  # seconds (default 10 min)
-    mode: Optional[str] = "vs_ai"  # "1v1" or "vs_ai"
+    mode: Optional[str] = "vs_ai"  # "1v1", "vs_ai", or "ai_vs_ai"
+
+
+class JoinMatchRequest(BaseModel):
+    room_id: str
+    player_id: str
 
 
 def _generate_procedural_avatar(name: str, index: int, team_id: int):
@@ -325,8 +335,9 @@ def _generate_procedural_avatar(name: str, index: int, team_id: int):
     if (h % 10) < 6: 
         skin_color = 3 # force more olive/brown tones for local Algerian players
     
-    # 2. Hair styles from the 6 export options
-    hair_styles = ["short", "shaved", "fade", "curly", "long", "afro"]
+    # 2. Hair styles matching the 6 GLB files recognized by GameServer
+    # short=0, long=1, mohawk=2, curly=3, ponytail=4, bald=5
+    hair_styles = ["short", "long", "mohawk", "curly", "ponytail", "bald"]
     hair_style = hair_styles[(h >> 2) % len(hair_styles)]
     
     # 3. Hair colors from the 8 options (dominant black/dark_brown)
@@ -368,7 +379,7 @@ def _generate_procedural_avatar(name: str, index: int, team_id: int):
     }
 
 
-async def _build_match_config(room_id: str, team_a_id: Optional[str], team_b_id: Optional[str], duration: int, mode: str) -> dict:
+async def _build_match_config(room_id: str, team_a_id: Optional[str], team_b_id: Optional[str], duration: int, mode: str, stadium_id: Optional[str] = None) -> dict:
     """Fetch formations + full player rosters with 22 skills from Catalog."""
     left_team = {"name": "Team A", "formation": [], "players": []}
     right_team = {"name": "Team B", "formation": [], "players": []}
@@ -441,19 +452,23 @@ async def _build_match_config(room_id: str, team_a_id: Optional[str], team_b_id:
     if not right_team["players"] and right_team["formation"]:
         right_team["players"] = _generic_players(right_team["formation"])
 
-    # Enrich both teams with procedural avatar metadata (only if catalog didn't provide them)
+    # Enrich both teams with procedural avatar metadata.
+    # If catalog already has values (e.g. from DB), keep them. Otherwise generate.
     for i, p in enumerate(left_team["players"]):
-        if "skin_color" not in p:
-            avatar = _generate_procedural_avatar(p["name"], i, 0)
-            p.update(avatar)
+        avatar = _generate_procedural_avatar(p["name"], i, 0)
+        for key, val in avatar.items():
+            if key not in p or p[key] is None:
+                p[key] = val
     for i, p in enumerate(right_team["players"]):
-        if "skin_color" not in p:
-            avatar = _generate_procedural_avatar(p["name"], i, 1)
-            p.update(avatar)
+        avatar = _generate_procedural_avatar(p["name"], i, 1)
+        for key, val in avatar.items():
+            if key not in p or p[key] is None:
+                p[key] = val
 
     return {
         "duration_seconds": duration,
         "mode": mode,
+        "stadium_id": stadium_id,
         "left_team": left_team,
         "right_team": right_team,
     }
@@ -494,24 +509,98 @@ def _write_config_to_disk(room_id: str, match_config: dict) -> str:
     return config_path
 
 
+async def _spawn_gf_server(
+    room_id: str,
+    match_config: dict,
+    mode: str,
+    player_a: str,
+    player_b: Optional[str],
+    team_a: Optional[str],
+    team_b: Optional[str],
+    stadium_id: Optional[str],
+    duration: int,
+    gf_token: str,
+):
+    """Spawn the GF server process (local, queue, or mock)."""
+    spawn_mode = os.getenv("GF_SPAWN_MODE", "local")
+    players = [p for p in [player_a, player_b] if p]
+
+    if spawn_mode == "queue":
+        spawn_request = {
+            "room_id": room_id,
+            "token": gf_token,
+            "team_a": team_a or "default-a",
+            "team_b": team_b or "default-b",
+            "stadium_id": stadium_id or "default-stadium",
+            "duration": duration,
+            "mode": mode,
+            "player_a": player_a,
+            "player_b": player_b,
+            "match_config": match_config,
+        }
+        await redis.lpush("gf.spawn", json.dumps(spawn_request))
+        active_matches[room_id] = {"queued": True, "players": players, "started_at": datetime.utcnow().isoformat(), "duration": duration}
+    elif spawn_mode == "mock":
+        env = os.environ.copy()
+        env["ROOM_ID"] = room_id
+        env["REDIS_URL"] = REDIS_URL
+        env["LIVEKIT_URL"] = LK_URL
+        env["GF_TOKEN"] = gf_token
+        env["DURATION"] = str(duration)
+        if not env.get("PATH"):
+            env["PATH"] = "/usr/local/bin:/usr/bin:/bin"
+        print(f"[Session] Spawning GF simulator for room {room_id}")
+        try:
+            proc = subprocess.Popen(
+                ["python3", "-u", "/app/gf_simulator.py"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=env,
+                bufsize=0,
+            )
+            print(f"[Session] GF simulator started with PID {proc.pid}")
+            active_matches[room_id] = {"proc": proc, "pid": proc.pid, "players": players, "started_at": datetime.utcnow().isoformat(), "duration": duration}
+            asyncio.create_task(monitor_process(room_id, proc))
+        except Exception as e:
+            print(f"[Session] Failed to spawn GF simulator: {e}")
+    else:
+        config_path = _write_config_to_disk(room_id, match_config)
+        proc = await asyncio.create_subprocess_exec(
+            GF_BINARY_PATH,
+            f"--room-id={room_id}",
+            f"--team-a={team_a or 'default-a'}",
+            f"--team-b={team_b or 'default-b'}",
+            f"--stadium={stadium_id or 'default-stadium'}",
+            f"--player-a={player_a}",
+            f"--player-b={player_b or 'bot'}",
+            f"--duration={duration}",
+            f"--mode={mode}",
+            f"--stats-url={STATS_SERVICE_URL}",
+            f"--redis-url={REDIS_URL}",
+            f"--config-file={config_path}",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        active_matches[room_id] = {"proc": proc, "pid": proc.pid, "players": players, "started_at": datetime.utcnow().isoformat(), "duration": duration}
+        asyncio.create_task(monitor_process(room_id, proc))
+
+
 @app.post("/internal/create-match")
 async def create_match(req: CreateMatchRequest):
     room_id = f"match-{uuid.uuid4()}"
 
-    # Validate mode; accept 1v1, vs_ai, and ai_vs_ai
     mode = req.mode if req.mode in ("1v1", "vs_ai", "ai_vs_ai") else "vs_ai"
     if req.mode == "ai_vs_ai":
         print(f"[Session] ai_vs_ai mode requested — bot vs bot, no human player")
 
-    # Build match config dict from catalog formations (roles, positions, controllable flags)
-    match_config = await _build_match_config(room_id, req.team_a, req.team_b, req.duration, mode)
+    match_config = await _build_match_config(room_id, req.team_a, req.team_b, req.duration, mode, req.stadium_id)
 
     # 1. Create LiveKit room
     await lkapi.room.create_room(
         CreateRoomRequest(name=room_id, max_participants=10, empty_timeout=300)
     )
 
-    # 2. Generate token for GF server (identity="gf-server")
+    # 2. Generate token for GF server
     gf_token = (
         AccessToken(LK_KEY, LK_SECRET)
         .with_grants(
@@ -526,7 +615,7 @@ async def create_match(req: CreateMatchRequest):
         .to_jwt()
     )
 
-    # 2b. Generate token for client (identity="user1")
+    # 2b. Generate token for creator (player A)
     client_token = (
         AccessToken(LK_KEY, LK_SECRET)
         .with_grants(
@@ -538,87 +627,139 @@ async def create_match(req: CreateMatchRequest):
                 can_publish_data=True,
             )
         )
-        .with_identity("user1")
+        .with_identity(req.player_a)
         .to_jwt()
     )
 
-    # 3. Spawn GF — local subprocess (dev) OR Redis queue (prod VM pool)
-    spawn_mode = os.getenv("GF_SPAWN_MODE", "local")  # "local", "queue" or "mock"
-
-    if spawn_mode == "queue":
-        # Embed full match config in Redis message so VM worker can write it locally
-        spawn_request = {
+    if mode == "1v1":
+        # PvP waiting mode: do NOT spawn GF yet, wait for player B to join
+        match_info = {
             "room_id": room_id,
-            "token": gf_token,
-            "team_a": req.team_a or "default-a",
-            "team_b": req.team_b or "default-b",
-            "stadium_id": req.stadium_id or "default-stadium",
-            "duration": req.duration,
+            "livekit_url": LK_URL,
+            "players": [req.player_a],
+            "status": "waiting",
             "mode": mode,
-            "player_a": req.player_a,
-            "player_b": req.player_b,
-            "match_config": match_config,  # VM worker writes this to disk before spawn
+            "team_a": req.team_a,
+            "team_b": req.team_b,
+            "stadium_id": req.stadium_id,
+            "duration": req.duration,
+            "match_config": match_config,
+            "gf_token": gf_token,
         }
-        await redis.lpush("gf.spawn", json.dumps(spawn_request))
-        active_matches[room_id] = {"queued": True, "players": [req.player_a, req.player_b], "started_at": datetime.utcnow().isoformat(), "duration": req.duration}
-    elif spawn_mode == "mock":
-        # GF Simulator with physics + AI, sends GameState via LiveKit DataChannel
-        env = os.environ.copy()
-        env["ROOM_ID"] = room_id
-        env["REDIS_URL"] = REDIS_URL
-        env["LIVEKIT_URL"] = LK_URL
-        env["GF_TOKEN"] = gf_token
-        env["DURATION"] = str(req.duration)
-        if not env.get("PATH"):
-            env["PATH"] = "/usr/local/bin:/usr/bin:/bin"
-        print(f"[Session] Spawning GF simulator for room {room_id}")
-        try:
-            proc = subprocess.Popen(
-                ["python3", "-u", "/app/gf_simulator.py"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                env=env,
-                bufsize=0,
-            )
-            print(f"[Session] GF simulator started with PID {proc.pid}")
-            active_matches[room_id] = {"proc": proc, "pid": proc.pid, "players": [req.player_a, req.player_b], "started_at": datetime.utcnow().isoformat(), "duration": req.duration}
-            asyncio.create_task(monitor_process(room_id, proc))
-        except Exception as e:
-            print(f"[Session] Failed to spawn GF simulator: {e}")
-    else:
-        # Local subprocess (single-node dev): write config to shared volume
-        config_path = _write_config_to_disk(room_id, match_config)
-        proc = await asyncio.create_subprocess_exec(
-            GF_BINARY_PATH,
-            f"--room-id={room_id}",
-            f"--team-a={req.team_a or 'default-a'}",
-            f"--team-b={req.team_b or 'default-b'}",
-            f"--stadium={req.stadium_id or 'default-stadium'}",
-            f"--player-a={req.player_a}",
-            f"--player-b={req.player_b}",
-            f"--duration={req.duration}",
-            f"--mode={mode}",
-            f"--stats-url={STATS_SERVICE_URL}",
-            f"--redis-url={REDIS_URL}",
-            f"--config-file={config_path}",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        active_matches[room_id] = {"proc": proc, "pid": proc.pid, "players": [req.player_a, req.player_b], "started_at": datetime.utcnow().isoformat(), "duration": req.duration}
-        asyncio.create_task(monitor_process(room_id, proc))
+        match_json = json.dumps(match_info)
+        await redis.setex(f"match:{req.player_a}", 120, match_json)
+        await redis.setex(f"room:{room_id}", 3600, match_json)
+        print(f"[Session] Created waiting PvP match {room_id} for player {req.player_a}")
+        return {"room_id": room_id, "livekit_url": LK_URL, "token": client_token, "status": "waiting"}
 
-    # 4. Store match info in Redis (short TTL for matchmaking polling)
+    # Immediate spawn for vs_ai / ai_vs_ai
+    await _spawn_gf_server(
+        room_id, match_config, mode, req.player_a, req.player_b,
+        req.team_a, req.team_b, req.stadium_id, req.duration, gf_token,
+    )
+
     match_info = {
         "room_id": room_id,
         "livekit_url": LK_URL,
-        "players": [req.player_a, req.player_b],
+        "players": [req.player_a, req.player_b or "bot"],
+        "status": "running",
     }
     match_json = json.dumps(match_info)
     await redis.setex(f"match:{req.player_a}", 120, match_json)
-    await redis.setex(f"match:{req.player_b}", 120, match_json)
+    if req.player_b:
+        await redis.setex(f"match:{req.player_b}", 120, match_json)
     await redis.setex(f"room:{room_id}", 3600, match_json)
 
-    return {"room_id": room_id, "livekit_url": LK_URL, "token": client_token}
+    return {"room_id": room_id, "livekit_url": LK_URL, "token": client_token, "status": "running"}
+
+
+@app.get("/internal/waiting-matches")
+async def waiting_matches():
+    """Return all PvP matches currently waiting for a second player."""
+    matches = []
+    try:
+        keys = await redis.keys("room:match-*")
+        for key in keys:
+            data = await redis.get(key)
+            if not data:
+                continue
+            try:
+                info = json.loads(data)
+                if info.get("status") == "waiting":
+                    matches.append({
+                        "room_id": info["room_id"],
+                        "player_a": info["players"][0] if info.get("players") else None,
+                        "team_a": info.get("team_a"),
+                        "team_b": info.get("team_b"),
+                        "duration": info.get("duration"),
+                    })
+            except json.JSONDecodeError:
+                continue
+    except Exception as e:
+        print(f"[Session] waiting-matches error: {e}", flush=True)
+    return {"matches": matches}
+
+
+@app.post("/internal/join-match")
+async def join_match(req: JoinMatchRequest):
+    """Player B joins a waiting PvP match and the GF server is spawned."""
+    room_id = req.room_id
+    data = await redis.get(f"room:{room_id}")
+    if not data:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    try:
+        info = json.loads(data)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="Corrupted match data")
+
+    if info.get("status") != "waiting":
+        raise HTTPException(status_code=400, detail="Match is not waiting for players")
+
+    if req.player_id in info.get("players", []):
+        raise HTTPException(status_code=400, detail="Player already in match")
+
+    # Update match info
+    info["players"].append(req.player_id)
+    info["status"] = "running"
+    info["player_b"] = req.player_id
+
+    # Spawn GF server now that both players are present
+    await _spawn_gf_server(
+        room_id,
+        info.get("match_config", {}),
+        info.get("mode", "1v1"),
+        info["players"][0],
+        req.player_id,
+        info.get("team_a"),
+        info.get("team_b"),
+        info.get("stadium_id"),
+        info.get("duration", 600),
+        info.get("gf_token", ""),
+    )
+
+    # Generate token for joining player (Player B)
+    player_b_token = (
+        AccessToken(LK_KEY, LK_SECRET)
+        .with_grants(
+            VideoGrants(
+                room_join=True,
+                room=room_id,
+                can_publish=True,
+                can_subscribe=True,
+                can_publish_data=True,
+            )
+        )
+        .with_identity(req.player_id)
+        .to_jwt()
+    )
+
+    # Persist updated info
+    await redis.setex(f"match:{req.player_id}", 120, json.dumps(info))
+    await redis.setex(f"room:{room_id}", 3600, json.dumps(info))
+
+    print(f"[Session] Player {req.player_id} joined match {room_id}. GF spawned. Match running.")
+    return {"room_id": room_id, "livekit_url": LK_URL, "token": player_b_token, "status": "running"}
 
 
 def _stream_output(proc: subprocess.Popen, room_id: str):

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{% if stadium %}Modifier{% else %}Nouveau{% endif %} stade – DZFoot Admin{% endblock %}
+{% block page_title %}{% if stadium %}Modifier{% else %}Nouveau{% endif %} stade{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <form method="post" action="{% if stadium %}/stadiums/{{ stadium.id }}/edit{% else %}/stadiums/new{% endif %}" class="form-card">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+      <div class="form-group">
+        <label>Nom</label>
+        <input type="text" name="name" value="{{ stadium.name if stadium else '' }}" required>
+      </div>
+      <div class="form-group">
+        <label>Ville</label>
+        <input type="text" name="city" value="{{ stadium.city if stadium else '' }}">
+      </div>
+      <div class="form-group">
+        <label>Capacite</label>
+        <input type="number" name="capacity" value="{{ stadium.capacity if stadium else 0 }}">
+      </div>
+      <div class="form-group">
+        <label>Model 3D URL</label>
+        <input type="text" name="model_3d_url" value="{{ stadium.model_3d_url if stadium else '' }}">
+      </div>
+      <div class="form-group">
+        <label>AR Marker Ref</label>
+        <input type="text" name="ar_marker_ref" value="{{ stadium.ar_marker_ref if stadium else '' }}">
+      </div>
+      <div class="form-group">
+        <label>Pitch Texture</label>
+        <input type="text" name="pitch_texture" value="{{ stadium.pitch_texture if stadium else '' }}">
+      </div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:10px;">
+      <button type="submit" class="btn btn-primary">Enregistrer</button>
+      <a href="/stadiums" class="btn btn-ghost">Annuler</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

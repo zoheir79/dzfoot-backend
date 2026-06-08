@@ -103,6 +103,22 @@ services:
       redis:
         condition: service_healthy
 
+  admin:
+    image: djdreamer79/dzfoot-backend-admin:latest
+    ports:
+      - "8006:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://dzfoot:dzfoot@postgres:5432/dzfoot
+      ADMIN_PORT: 8000
+      ADMIN_SECRET: ${ADMIN_SECRET:-dzfoot-admin-secret}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./admin/data:/app/data
+
   nginx:
     image: nginx:alpine
     ports:
@@ -115,6 +131,7 @@ services:
       - matchmaking
       - stats
       - catalog
+      - admin
 
 networks:
   dzfoot-network:

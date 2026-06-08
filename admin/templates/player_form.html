@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{% if player %}Modifier{% else %}Nouveau{% endif %} joueur – DZFoot Admin{% endblock %}
+{% block page_title %}{% if player %}Modifier{% else %}Nouveau{% endif %} joueur{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <form method="post" action="{% if player %}/players/{{ player.id }}/edit{% else %}/players/new{% endif %}" class="form-card">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+      <div class="form-group">
+        <label>Nom</label>
+        <input type="text" name="name" value="{{ player.name if player else '' }}" required>
+      </div>
+      <div class="form-group">
+        <label>Equipe</label>
+        <select name="team_id">
+          <option value="">-- Libre --</option>
+          {% for t in teams %}
+          <option value="{{ t.id }}" {% if player and player.team_id == t.id %}selected{% endif %}>{{ t.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Poste</label>
+        <input type="text" name="position" value="{{ player.position if player else '' }}" placeholder="ATT, MIL, DEF, GB">
+      </div>
+      <div class="form-group">
+        <label>Numero</label>
+        <input type="number" name="number" value="{{ player.number if player else 0 }}">
+      </div>
+      <div class="form-group">
+        <label>Vitesse (0-1)</label>
+        <input type="number" step="0.01" min="0" max="1" name="speed" value="{{ player.speed if player else 0.75 }}">
+      </div>
+      <div class="form-group">
+        <label>Tir (0-1)</label>
+        <input type="number" step="0.01" min="0" max="1" name="shooting" value="{{ player.shooting if player else 0.70 }}">
+      </div>
+      <div class="form-group">
+        <label>Passe (0-1)</label>
+        <input type="number" step="0.01" min="0" max="1" name="passing" value="{{ player.passing if player else 0.72 }}">
+      </div>
+      <div class="form-group">
+        <label>Defense (0-1)</label>
+        <input type="number" step="0.01" min="0" max="1" name="defense" value="{{ player.defense if player else 0.65 }}">
+      </div>
+      <div class="form-group">
+        <label>Endurance (0-1)</label>
+        <input type="number" step="0.01" min="0" max="1" name="stamina" value="{{ player.stamina if player else 0.80 }}">
+      </div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:10px;">
+      <button type="submit" class="btn btn-primary">Enregistrer</button>
+      <a href="/players" class="btn btn-ghost">Annuler</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

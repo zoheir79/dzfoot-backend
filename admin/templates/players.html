@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Joueurs – DZFoot Admin{% endblock %}
+{% block page_title %}Joueurs{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <div class="search-row">
+    <form method="get" action="/players" style="display:flex;gap:12px;flex:1;align-items:center;">
+      <input type="text" name="q" value="{{ q or '' }}" placeholder="Rechercher un joueur...">
+      <select name="team_id" style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);">
+        <option value="">Toutes les equipes</option>
+        {% for t in teams %}
+        <option value="{{ t.id }}" {% if team_id == t.id %}selected{% endif %}>{{ t.name }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-primary">Filtrer</button>
+      {% if q or team_id %}<a href="/players" class="btn btn-ghost">Reset</a>{% endif %}
+    </form>
+    <a href="/players/new" class="btn btn-primary">+ Nouveau joueur</a>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Equipe</th>
+        <th>Poste</th>
+        <th>N°</th>
+        <th>VIT</th>
+        <th>TIR</th>
+        <th>PAS</th>
+        <th>DEF</th>
+        <th>END</th>
+        <th style="text-align:right;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in players %}
+      <tr>
+        <td><strong>{{ p.name }}</strong></td>
+        <td>{{ p.team_name or '-' }}</td>
+        <td>{{ p.position or '-' }}</td>
+        <td>{{ p.number or '-' }}</td>
+        <td>{{ "%.0f" | format(p.speed*100) }}</td>
+        <td>{{ "%.0f" | format(p.shooting*100) }}</td>
+        <td>{{ "%.0f" | format(p.passing*100) }}</td>
+        <td>{{ "%.0f" | format(p.defense*100) }}</td>
+        <td>{{ "%.0f" | format(p.stamina*100) }}</td>
+        <td style="text-align:right;">
+          <a href="/players/{{ p.id }}/edit" class="btn btn-ghost" style="padding:4px 10px;font-size:12px;">Modifier</a>
+          <form method="post" action="/players/{{ p.id }}/delete" style="display:inline;" onsubmit="return confirm('Supprimer ce joueur ?');">
+            <button type="submit" class="btn btn-danger" style="padding:4px 10px;font-size:12px;">Supprimer</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="10" style="text-align:center;color:var(--text-muted);">Aucun joueur</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

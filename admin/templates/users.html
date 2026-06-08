@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Utilisateurs – DZFoot Admin{% endblock %}
+{% block page_title %}Utilisateurs{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <div class="search-row">
+    <form method="get" action="/users" style="display:flex;gap:12px;flex:1;align-items:center;">
+      <input type="text" name="q" value="{{ q or '' }}" placeholder="Pseudo ou email...">
+      <button type="submit" class="btn btn-primary">Rechercher</button>
+      {% if q %}<a href="/users" class="btn btn-ghost">Reset</a>{% endif %}
+    </form>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Pseudo</th>
+        <th>Email</th>
+        <th>ELO</th>
+        <th>Avatar</th>
+        <th>Cree le</th>
+        <th style="text-align:right;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td><strong>{{ u.pseudo }}</strong></td>
+        <td>{{ u.email }}</td>
+        <td>{{ u.elo }}</td>
+        <td>
+          {% if u.avatar_url %}<img src="{{ u.avatar_url }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">{% else %}-{% endif %}
+        </td>
+        <td>{{ u.created_at.strftime('%d/%m/%Y') if u.created_at else '-' }}</td>
+        <td style="text-align:right;">
+          <form method="post" action="/users/{{ u.id }}/delete" style="display:inline;" onsubmit="return confirm('Supprimer cet utilisateur ? Cela supprimera aussi ses matchs et stats.');">
+            <button type="submit" class="btn btn-danger" style="padding:4px 10px;font-size:12px;">Supprimer</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="text-align:center;color:var(--text-muted);">Aucun utilisateur</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

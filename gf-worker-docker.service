@@ -1,0 +1,18 @@
+[Unit]
+Description=DZFoot GF Docker Worker
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/dzfoot
+EnvironmentFile=/opt/dzfoot/.env
+ExecStart=/usr/bin/python3 /opt/dzfoot/gf_worker_docker.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

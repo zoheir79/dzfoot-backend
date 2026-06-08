@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion – DZFoot Admin</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="login-body">
+  <div class="login-card fade-in">
+    <div class="brand" style="text-align:center;margin-bottom:28px;border:none;padding:0;">
+      DZFoot
+      <span style="display:block;font-size:10px;letter-spacing:4px;color:var(--text-muted);-webkit-text-fill-color:var(--text-muted);">Admin Panel</span>
+    </div>
+
+    {% if error %}
+    <div class="error-toast">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/login" autocomplete="off">
+      <div class="form-group">
+        <label>Nom d'utilisateur</label>
+        <input type="text" name="username" placeholder="admin" required autofocus>
+      </div>
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" name="password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Se connecter</button>
+    </form>
+
+    <p style="margin-top:18px;text-align:center;font-size:12px;color:var(--text-muted);">
+      Veuillez contacter l'administrateur systeme pour les identifiants.
+    </p>
+  </div>
+</body>
+</html>

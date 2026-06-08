@@ -1,0 +1,17 @@
+[Unit]
+Description=DZFoot GF Native Worker
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/dzfoot
+EnvironmentFile=/opt/dzfoot/.env
+ExecStart=/usr/bin/python3 /opt/dzfoot/gf-worker-native.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

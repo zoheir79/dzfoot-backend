@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Stades – DZFoot Admin{% endblock %}
+{% block page_title %}Stades{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <div class="search-row">
+    <h2 style="font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);">Liste des stades</h2>
+    <a href="/stadiums/new" class="btn btn-primary">+ Nouveau stade</a>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Ville</th>
+        <th>Capacite</th>
+        <th>3D URL</th>
+        <th>Marker</th>
+        <th style="text-align:right;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in stadiums %}
+      <tr>
+        <td><strong>{{ s.name }}</strong></td>
+        <td>{{ s.city or '-' }}</td>
+        <td>{{ s.capacity or '-' }}</td>
+        <td>{{ s.model_3d_url or '-' }}</td>
+        <td>{{ s.ar_marker_ref or '-' }}</td>
+        <td style="text-align:right;">
+          <a href="/stadiums/{{ s.id }}/edit" class="btn btn-ghost" style="padding:4px 10px;font-size:12px;">Modifier</a>
+          <form method="post" action="/stadiums/{{ s.id }}/delete" style="display:inline;" onsubmit="return confirm('Supprimer ce stade ?');">
+            <button type="submit" class="btn btn-danger" style="padding:4px 10px;font-size:12px;">Supprimer</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="text-align:center;color:var(--text-muted);">Aucun stade</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

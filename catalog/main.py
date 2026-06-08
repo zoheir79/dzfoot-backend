@@ -118,11 +118,12 @@ async def team_formation(team_id: str):
             "kit_texture_url": r["kit_texture_url"],
         }
 
-        # Fetch all 11 players with full skill profiles + avatar config
+        # Fetch all 11 players with full skill profiles + avatar config + photo
         avatar_cols = "skin_color, hair_style, hair_color, body_type, beard_style, eye_color, height"
+        photo_cols = "photo_url, photo_local"
         cols = ", ".join(SKILL_COLS)
         prow = await session.execute(
-            text(f"SELECT id, name, position, number, {cols}, {avatar_cols} FROM players WHERE team_id=:tid ORDER BY number"),
+            text(f"SELECT id, name, position, number, {cols}, {avatar_cols}, {photo_cols} FROM players WHERE team_id=:tid ORDER BY number"),
             {"tid": team_id},
         )
         players = []
@@ -141,6 +142,8 @@ async def team_formation(team_id: str):
                 "beard_style": int(pd.get("beard_style", 0)),
                 "eye_color": int(pd.get("eye_color", 0)),
                 "height": float(pd.get("height", 1.78)),
+                "photo_url": pd.get("photo_url") or "",
+                "photo_local": pd.get("photo_local") or "",
             })
 
     data = formations.get(formation_key, formations["default"]).copy()

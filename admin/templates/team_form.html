@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{% if team %}Modifier{% else %}Nouvelle{% endif %} equipe – DZFoot Admin{% endblock %}
+{% block page_title %}{% if team %}Modifier{% else %}Nouvelle{% endif %} equipe{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <form method="post" action="{% if team %}/teams/{{ team.id }}/edit{% else %}/teams/new{% endif %}" class="form-card">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+      <div class="form-group">
+        <label>Nom</label>
+        <input type="text" name="name" value="{{ team.name if team else '' }}" required>
+      </div>
+      <div class="form-group">
+        <label>Pays</label>
+        <input type="text" name="country" value="{{ team.country if team else '' }}">
+      </div>
+      <div class="form-group">
+        <label>Sigle</label>
+        <input type="text" name="short_name" value="{{ team.short_name if team else '' }}">
+      </div>
+      <div class="form-group">
+        <label>Ligue</label>
+        <input type="text" name="league" value="{{ team.league if team else 'Ligue 1 Mobilis' }}">
+      </div>
+      <div class="form-group">
+        <label>Couleur primaire</label>
+        <input type="color" name="color_primary" value="{{ team.color_primary if team else '#ffffff' }}" style="height:42px;padding:2px;">
+      </div>
+      <div class="form-group">
+        <label>Couleur secondaire</label>
+        <input type="color" name="color_secondary" value="{{ team.color_secondary if team else '#000000' }}" style="height:42px;padding:2px;">
+      </div>
+      <div class="form-group">
+        <label>RGB1</label>
+        <input type="text" name="color_rgb1" value="{{ team.color_rgb1 if team else '' }}" placeholder="220,0,0">
+      </div>
+      <div class="form-group">
+        <label>RGB2</label>
+        <input type="text" name="color_rgb2" value="{{ team.color_rgb2 if team else '' }}" placeholder="0,0,220">
+      </div>
+      <div class="form-group">
+        <label>Formation</label>
+        <select name="formation">
+          {% set formations = ['4-3-3','4-4-2','3-5-2','4-2-3-1','5-3-2','4-5-1'] %}
+          {% for f in formations %}
+          <option value="{{ f }}" {% if team and team.formation == f %}selected{% endif %}>{{ f }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Logo URL</label>
+        <input type="text" name="logo_url" value="{{ team.logo_url if team else '' }}">
+      </div>
+      <div class="form-group" style="grid-column:1 / -1;">
+        <label>Kit texture URL</label>
+        <input type="text" name="kit_texture_url" value="{{ team.kit_texture_url if team else '' }}">
+      </div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:10px;">
+      <button type="submit" class="btn btn-primary">Enregistrer</button>
+      <a href="/teams" class="btn btn-ghost">Annuler</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

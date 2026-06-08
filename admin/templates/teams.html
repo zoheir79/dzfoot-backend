@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Equipes – DZFoot Admin{% endblock %}
+{% block page_title %}Equipes{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <div class="search-row">
+    <form method="get" action="/teams" style="display:flex;gap:12px;flex:1;align-items:center;">
+      <input type="text" name="q" value="{{ q or '' }}" placeholder="Rechercher une equipe...">
+      <button type="submit" class="btn btn-primary">Rechercher</button>
+      {% if q %}<a href="/teams" class="btn btn-ghost">Reset</a>{% endif %}
+    </form>
+    <a href="/teams/new" class="btn btn-primary">+ Nouvelle equipe</a>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Pays</th>
+        <th>Sigle</th>
+        <th>Ligue</th>
+        <th>Formation</th>
+        <th style="text-align:right;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in teams %}
+      <tr>
+        <td><strong>{{ t.name }}</strong></td>
+        <td>{{ t.country or '-' }}</td>
+        <td>{{ t.short_name or '-' }}</td>
+        <td>{{ t.league or '-' }}</td>
+        <td>{{ t.formation or '-' }}</td>
+        <td style="text-align:right;">
+          <a href="/teams/{{ t.id }}/edit" class="btn btn-ghost" style="padding:4px 10px;font-size:12px;">Modifier</a>
+          <form method="post" action="/teams/{{ t.id }}/delete" style="display:inline;" onsubmit="return confirm('Supprimer cette equipe ?');">
+            <button type="submit" class="btn btn-danger" style="padding:4px 10px;font-size:12px;">Supprimer</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="text-align:center;color:var(--text-muted);">Aucune equipe</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

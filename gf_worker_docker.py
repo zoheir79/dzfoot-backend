@@ -2,8 +2,8 @@
 """DZFoot GF Worker - Docker mode via docker-py"""
 import os, sys, json, time, signal, threading
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
-STATS_URL = os.getenv("STATS_URL", "http://stats:8000")
+REDIS_URL = os.getenv("REDIS_URL", "redis://192.168.199.134:6379")
+STATS_URL = os.getenv("STATS_URL", "http://192.168.199.134:8004")
 LIVEKIT_URL = os.getenv("LIVEKIT_URL", "")
 GF_IMAGE = os.getenv("GF_IMAGE", "dzfoot-gf-server:prod")
 GF_NETWORK = os.getenv("GF_NETWORK", "dzfoot-backend_default")
@@ -111,8 +111,21 @@ while running:
         container = client.containers.run(
             image=GF_IMAGE, command=cmd, name=f"gf-{room_id}",
             network=GF_NETWORK, environment=env, volumes=volumes,
-            detach=True, remove=True)
+            detach=True, remove=False)
         print(f"[GF Docker Worker {WORKER_ID}] Container {container.id[:12]} launched")
+
+        # Wait a few seconds then check if container is still alive
+        time.sleep(5)
+        container.reload()
+        if container.status != "running":
+            crash_logs = container.logs(stdout=True, stderr=True, tail=100).decode("utf-8", errors="replace")
+            print(f"[GF Docker Worker {WORKER_ID}] CRASH detected for {room_id}! Logs:\n{crash_logs}", flush=True)
+            r.publish("gf.crashed", room_id)
+            try:
+                container.remove(force=True)
+            except Exception:
+                pass
+            continue
         r.publish("gf.ready", room_id)
     except redis.exceptions.ConnectionError as e:
         print(f"[GF Docker Worker {WORKER_ID}] Redis error: {e}")
