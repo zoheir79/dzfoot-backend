@@ -167,7 +167,7 @@ async def require_admin(request: Request) -> Dict[str, Any]:
 async def login_page(request: Request):
     if get_current_user_from_cookie(request):
         return RedirectResponse(url="/", status_code=302)
-    return templates.TemplateResponse("login.html", {"request": request, "error": None})
+    return templates.TemplateResponse(request, "login.html", {"error": None})
 
 
 @app.post("/login")
@@ -180,8 +180,9 @@ async def login_post(
 
     if not user or not verify_password(password, user.hashed_password):
         return templates.TemplateResponse(
+            request,
             "login.html",
-            {"request": request, "error": "Nom d'utilisateur ou mot de passe invalide"},
+            {"error": "Nom d'utilisateur ou mot de passe invalide"},
             status_code=401,
         )
 
@@ -245,9 +246,9 @@ async def dashboard(request: Request, user: Dict[str, Any] = Depends(require_adm
         recent_matches = [dict(row._mapping) for row in r]
 
     return templates.TemplateResponse(
+        request,
         "dashboard.html",
         {
-            "request": request,
             "user": user,
             "stats": stats,
             "recent_matches": recent_matches,
@@ -276,14 +277,14 @@ async def teams_list(
             r = await pg.execute(text("SELECT * FROM teams ORDER BY name"))
         teams = [dict(row._mapping) for row in r]
     return templates.TemplateResponse(
-        "teams.html", {"request": request, "user": user, "teams": teams, "q": q}
+        request, "teams.html", {"user": user, "teams": teams, "q": q}
     )
 
 
 @app.get("/teams/new", response_class=HTMLResponse)
 async def team_new_form(request: Request, user: Dict[str, Any] = Depends(require_admin)):
     return templates.TemplateResponse(
-        "team_form.html", {"request": request, "user": user, "team": None}
+        request, "team_form.html", {"user": user, "team": None}
     )
 
 
@@ -342,7 +343,7 @@ async def team_edit_form(
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
     return templates.TemplateResponse(
-        "team_form.html", {"request": request, "user": user, "team": team}
+        request, "team_form.html", {"user": user, "team": team}
     )
 
 
@@ -428,9 +429,9 @@ async def players_list(
         r2 = await pg.execute(text("SELECT id, name FROM teams ORDER BY name"))
         teams = [dict(row._mapping) for row in r2]
     return templates.TemplateResponse(
+        request,
         "players.html",
         {
-            "request": request,
             "user": user,
             "players": players,
             "teams": teams,
@@ -448,8 +449,9 @@ async def player_new_form(
         r = await pg.execute(text("SELECT id, name FROM teams ORDER BY name"))
         teams = [dict(row._mapping) for row in r]
     return templates.TemplateResponse(
+        request,
         "player_form.html",
-        {"request": request, "user": user, "player": None, "teams": teams},
+        {"user": user, "player": None, "teams": teams},
     )
 
 
@@ -505,8 +507,9 @@ async def player_edit_form(
     if not player:
         raise HTTPException(status_code=404, detail="Player not found")
     return templates.TemplateResponse(
+        request,
         "player_form.html",
-        {"request": request, "user": user, "player": player, "teams": teams},
+        {"user": user, "player": player, "teams": teams},
     )
 
 
@@ -586,7 +589,7 @@ async def matches_list(
         )
         matches = [dict(row._mapping) for row in r]
     return templates.TemplateResponse(
-        "matches.html", {"request": request, "user": user, "matches": matches}
+        request, "matches.html", {"user": user, "matches": matches}
     )
 
 
@@ -622,7 +625,7 @@ async def users_list(
             r = await pg.execute(text("SELECT * FROM users ORDER BY created_at DESC"))
         users = [dict(row._mapping) for row in r]
     return templates.TemplateResponse(
-        "users.html", {"request": request, "user": user, "users": users, "q": q}
+        request, "users.html", {"user": user, "users": users, "q": q}
     )
 
 
@@ -658,7 +661,7 @@ async def stadiums_list(
         r = await pg.execute(text("SELECT * FROM stadiums ORDER BY name"))
         stadiums = [dict(row._mapping) for row in r]
     return templates.TemplateResponse(
-        "stadiums.html", {"request": request, "user": user, "stadiums": stadiums}
+        request, "stadiums.html", {"user": user, "stadiums": stadiums}
     )
 
 
@@ -667,7 +670,7 @@ async def stadium_new_form(
     request: Request, user: Dict[str, Any] = Depends(require_admin)
 ):
     return templates.TemplateResponse(
-        "stadium_form.html", {"request": request, "user": user, "stadium": None}
+        request, "stadium_form.html", {"user": user, "stadium": None}
     )
 
 
@@ -714,7 +717,7 @@ async def stadium_edit_form(
     if not stadium:
         raise HTTPException(status_code=404, detail="Stadium not found")
     return templates.TemplateResponse(
-        "stadium_form.html", {"request": request, "user": user, "stadium": stadium}
+        request, "stadium_form.html", {"user": user, "stadium": stadium}
     )
 
 
