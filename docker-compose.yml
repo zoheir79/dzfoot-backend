@@ -29,6 +29,7 @@ services:
 
   account:
     image: djdreamer79/dzfoot-backend-account:latest
+    build: ./account
     ports:
       - "8001:8000"
     environment:
@@ -46,6 +47,7 @@ services:
 
   session:
     image: djdreamer79/dzfoot-backend-session:latest
+    build: ./session
     ports:
       - "8002:8000"
     environment:
@@ -67,6 +69,7 @@ services:
 
   matchmaking:
     image: djdreamer79/dzfoot-backend-matchmaking:latest
+    build: ./matchmaking
     ports:
       - "8003:8000"
     environment:
@@ -79,6 +82,7 @@ services:
 
   stats:
     image: djdreamer79/dzfoot-backend-stats:latest
+    build: ./stats
     ports:
       - "8004:8000"
     environment:

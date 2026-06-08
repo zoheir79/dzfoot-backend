@@ -1,6 +1,7 @@
 import os
 import json
 from typing import Optional
+from uuid import UUID
 
 from fastapi import FastAPI, Depends, HTTPException
 from pydantic import BaseModel
@@ -16,6 +17,14 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 engine = create_async_engine(DATABASE_URL)
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 redis: Optional[aioredis.Redis] = None
+
+
+def _row_to_dict(row) -> dict:
+    d = dict(row._mapping)
+    for k, v in d.items():
+        if isinstance(v, UUID):
+            d[k] = str(v)
+    return d
 
 
 @app.on_event("startup")
@@ -114,7 +123,7 @@ async def leaderboard(limit: int = 20):
             """),
             {"lim": limit},
         )
-        result = [dict(r._mapping) for r in rows]
+        result = [_row_to_dict(r) for r in rows]
     await redis.setex("leaderboard:global", 300, json.dumps(result))
     return result
 
