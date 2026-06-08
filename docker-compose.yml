@@ -92,6 +92,7 @@ services:
 
   catalog:
     image: djdreamer79/dzfoot-backend-catalog:latest
+    build: ./catalog
     ports:
       - "8005:8000"
     environment:
