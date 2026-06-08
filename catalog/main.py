@@ -1,6 +1,7 @@
 import os
 import json
 from typing import Optional
+from uuid import UUID
 
 from fastapi import FastAPI, HTTPException
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -18,6 +19,15 @@ async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False
 redis: Optional[aioredis.Redis] = None
 
 CACHE_TTL = 3600
+
+
+def _row_to_dict(row) -> dict:
+    """Convert a SQLAlchemy row mapping to a plain dict with UUIDs as strings."""
+    d = dict(row._mapping)
+    for k, v in d.items():
+        if isinstance(v, UUID):
+            d[k] = str(v)
+    return d
 
 
 @app.on_event("startup")
@@ -45,7 +55,7 @@ async def list_teams():
         return json.loads(cached)
     async with async_session() as session:
         rows = await session.execute(text("SELECT * FROM teams ORDER BY name"))
-        result = [dict(r._mapping) for r in rows]
+        result = [_row_to_dict(r) for r in rows]
     await redis.setex("teams:all", CACHE_TTL, json.dumps(result))
     return result
 
@@ -61,7 +71,7 @@ async def team_players(team_id: str):
             text("SELECT * FROM players WHERE team_id=:tid ORDER BY number"),
             {"tid": team_id},
         )
-        result = [dict(r._mapping) for r in rows]
+        result = [_row_to_dict(r) for r in rows]
     await redis.setex(key, CACHE_TTL, json.dumps(result))
     return result
 
@@ -162,6 +172,6 @@ async def list_stadiums():
         return json.loads(cached)
     async with async_session() as session:
         rows = await session.execute(text("SELECT * FROM stadiums"))
-        result = [dict(r._mapping) for r in rows]
+        result = [_row_to_dict(r) for r in rows]
     await redis.setex("stadiums:all", CACHE_TTL, json.dumps(result))
     return result
