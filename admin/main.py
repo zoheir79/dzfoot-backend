@@ -13,7 +13,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker as async_sessionmaker
 
-from passlib.context import CryptContext
+import bcrypt
 
 # ---------------------------------------------------------------------------
 # Config
@@ -23,6 +23,14 @@ DATABASE_URL = os.getenv("DATABASE_URL", "")
 ADMIN_PORT = int(os.getenv("ADMIN_PORT", "8080"))
 ADMIN_SECRET = os.getenv("ADMIN_SECRET", "dzfoot-admin-secret-change-me")
 COOKIE_NAME = "dzfoot_admin_session"
+
+
+def hash_password(plain: str) -> str:
+    return bcrypt.hashpw(plain.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
 
 # ---------------------------------------------------------------------------
 # SQLite – Auth Admin
@@ -63,11 +71,6 @@ pg_engine = create_async_engine(DATABASE_URL, echo=False)
 AsyncSessionLocal = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
 
 # ---------------------------------------------------------------------------
-# Passwords
-# ---------------------------------------------------------------------------
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# ---------------------------------------------------------------------------
 # FastAPI
 # ---------------------------------------------------------------------------
 app = FastAPI(title="DZFoot Admin Panel")
@@ -98,7 +101,7 @@ def init_admin() -> None:
         user = AdminUser(
             username="admin",
             email="admin@dzfoot.local",
-            hashed_password=pwd_context.hash(temp_pass),
+            hashed_password=hash_password(temp_pass),
             role="admin",
         )
         db.add(user)
@@ -175,7 +178,7 @@ async def login_post(
     user = db.query(AdminUser).filter(AdminUser.username == username).first()
     db.close()
 
-    if not user or not pwd_context.verify(password, user.hashed_password):
+    if not user or not verify_password(password, user.hashed_password):
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": "Nom d'utilisateur ou mot de passe invalide"},
