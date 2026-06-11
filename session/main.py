@@ -790,7 +790,7 @@ async def monitor_process(room_id: str, proc: subprocess.Popen):
     if exit_code != 0:
         await redis.publish("gf.crashed", room_id)
     else:
-        await redis.publish("match.finished", room_id)
+        await redis.publish("gf.finished", room_id)
     await redis.delete(f"room:{room_id}")
 
 
