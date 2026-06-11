@@ -30,6 +30,14 @@ def _row_to_dict(row) -> dict:
     return d
 
 
+def _is_uuid(s: str) -> bool:
+    try:
+        UUID(s)
+        return True
+    except ValueError:
+        return False
+
+
 @app.on_event("startup")
 async def startup():
     global redis
@@ -49,6 +57,7 @@ async def health():
 
 
 @app.get("/teams")
+@app.get("/teams/", include_in_schema=False)
 async def list_teams():
     cached = await redis.get("teams:all")
     if cached:
@@ -101,7 +110,8 @@ SKILL_COLS = [
 
 @app.get("/teams/{team_id}/formation")
 async def team_formation(team_id: str):
-    """Return formation + full player roster with 22 GF skills for a team."""
+    """Return formation + full player roster with 22 GF skills for a team.
+    Accepts either a UUID or a short_name (e.g. 'mca', 'mco')."""
     key = f"team:{team_id}:formation"
     cached = await redis.get(key)
     if cached:
@@ -109,13 +119,21 @@ async def team_formation(team_id: str):
 
     formations = _load_formations()
     async with async_session() as session:
+        # Support both UUID and short_name lookups
+        if _is_uuid(team_id):
+            team_where = "id=:tid"
+        else:
+            team_where = "short_name ILIKE :tid"
+
         row = await session.execute(
-            text("SELECT name, short_name, color_primary, color_secondary, color_rgb1, color_rgb2, league, kit_texture_url, formation FROM teams WHERE id=:tid"),
+            text(f"SELECT id, name, short_name, color_primary, color_secondary, color_rgb1, color_rgb2, league, kit_texture_url, formation FROM teams WHERE {team_where}"),
             {"tid": team_id},
         )
         r = row.mappings().first()
         if not r:
             raise HTTPException(status_code=404, detail="Team not found")
+
+        actual_team_id = str(r["id"])
         formation_key = r["formation"] or "default"
         team_name = r["name"]
         team_meta = {
@@ -129,12 +147,12 @@ async def team_formation(team_id: str):
         }
 
         # Fetch all 11 players with full skill profiles + avatar config + photo
-        avatar_cols = "skin_color, hair_style, hair_color, body_type, beard_style, eye_color, height"
+        avatar_cols = "skin_color, hair_style, hair_color, body_type, beard_style, eye_color"
         photo_cols = "photo_url, photo_local"
         cols = ", ".join(SKILL_COLS)
         prow = await session.execute(
             text(f"SELECT id, name, position, number, {cols}, {avatar_cols}, {photo_cols} FROM players WHERE team_id=:tid ORDER BY number"),
-            {"tid": team_id},
+            {"tid": actual_team_id},
         )
         players = []
         for p in prow.mappings().all():
@@ -151,14 +169,14 @@ async def team_formation(team_id: str):
                 "body_type": int(pd.get("body_type", 1)),
                 "beard_style": int(pd.get("beard_style", 0)),
                 "eye_color": int(pd.get("eye_color", 0)),
-                "height": float(pd.get("height", 1.78)),
+                "height": 1.78,
                 "photo_url": pd.get("photo_url") or "",
                 "photo_local": pd.get("photo_local") or "",
             })
 
     data = formations.get(formation_key, formations["default"]).copy()
     data["team_name"] = team_name
-    data["team_id"] = team_id
+    data["team_id"] = actual_team_id
     data.update(team_meta)
     data["players"] = players
     await redis.setex(key, CACHE_TTL, json.dumps(data))

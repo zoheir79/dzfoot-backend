@@ -195,8 +195,8 @@ async def _bot_relay_for_room(room_id: str):
         def on_participant_disconnected(participant):
             try:
                 identity = getattr(participant, "identity", "")
-                # Ignore disconnects from gf-server itself or other bots
-                if identity.startswith("bot-") or identity == "gf-server":
+                # Ignore disconnects from gf-server, relay bots, and AI player "bot"
+                if identity.startswith("bot-") or identity == "gf-server" or identity == "bot":
                     return
                 print(f"[Bot {room_id}] Real participant '{identity}' disconnected — cleaning up match", flush=True)
                 asyncio.create_task(_cleanup_orphan_match(room_id))
@@ -465,10 +465,18 @@ async def _build_match_config(room_id: str, team_a_id: Optional[str], team_b_id:
             if key not in p or p[key] is None:
                 p[key] = val
 
+    # Ensure no null values are sent to C++ GF server (nlohmann::json .value()
+    # throws type_error.302 when key exists but value is null)
+    for team in (left_team, right_team):
+        for key in ("short_name", "color_primary", "color_secondary",
+                    "color_rgb1", "color_rgb2", "kit_texture_url", "league"):
+            if team.get(key) is None:
+                team[key] = ""
+
     return {
         "duration_seconds": duration,
         "mode": mode,
-        "stadium_id": stadium_id,
+        "stadium_id": stadium_id or "",
         "left_team": left_team,
         "right_team": right_team,
     }
