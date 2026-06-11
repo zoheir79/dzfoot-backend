@@ -25,6 +25,21 @@ except Exception as e:
     sys.exit(1)
 
 running = True
+active_containers = {}  # room_id -> container
+
+
+def _stop_and_remove(container, room_id="unknown"):
+    """Force-stop then remove a container, swallowing all errors."""
+    try:
+        container.stop(timeout=2)
+    except Exception:
+        pass
+    try:
+        container.remove(force=True)
+        print(f"[GF Docker Worker {WORKER_ID}] Removed container for {room_id}", flush=True)
+    except Exception:
+        pass
+
 
 def shutdown(sig, frame):
     global running
@@ -32,6 +47,18 @@ def shutdown(sig, frame):
 
 signal.signal(signal.SIGINT, shutdown)
 signal.signal(signal.SIGTERM, shutdown)
+
+
+def reap_stopped():
+    """Periodically remove any gf-* containers that are not running."""
+    while running:
+        time.sleep(30)
+        try:
+            for c in client.containers.list(all=True):
+                if c.name.startswith("gf-") and c.status != "running":
+                    _stop_and_remove(c, c.name)
+        except Exception as e:
+            print(f"[GF Docker Worker {WORKER_ID}] Reaper error: {e}", flush=True)
 
 
 def cleanup_listener():
@@ -48,20 +75,31 @@ def cleanup_listener():
         try:
             room_id = message["data"].decode("utf-8") if isinstance(message["data"], bytes) else message["data"]
             container_name = f"gf-{room_id}"
+            active_containers.pop(room_id, None)
             try:
                 container = client.containers.get(container_name)
-                container.stop(timeout=2)
-                print(f"[GF Docker Worker {WORKER_ID}] Stopped container {container_name}", flush=True)
+                _stop_and_remove(container, room_id)
+                print(f"[GF Docker Worker {WORKER_ID}] Cleaned up container {container_name}", flush=True)
             except docker.errors.NotFound:
                 pass  # Already gone
             except Exception as e:
-                print(f"[GF Docker Worker {WORKER_ID}] Stop error for {container_name}: {e}", flush=True)
+                print(f"[GF Docker Worker {WORKER_ID}] Cleanup error for {container_name}: {e}", flush=True)
         except Exception as e:
             print(f"[GF Docker Worker {WORKER_ID}] Cleanup listener error: {e}", flush=True)
 
 
-# Start cleanup listener in background thread
+# Clean up any orphaned gf-* containers on startup
+print(f"[GF Docker Worker {WORKER_ID}] Removing orphaned gf-* containers...", flush=True)
+try:
+    for c in client.containers.list(all=True):
+        if c.name.startswith("gf-") and c.status != "running":
+            _stop_and_remove(c, c.name)
+except Exception as e:
+    print(f"[GF Docker Worker {WORKER_ID}] Startup cleanup error: {e}", flush=True)
+
+# Start background threads
 threading.Thread(target=cleanup_listener, daemon=True).start()
+threading.Thread(target=reap_stopped, daemon=True).start()
 
 while running:
     try:
