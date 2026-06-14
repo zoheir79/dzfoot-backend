@@ -23,6 +23,7 @@ TICK_RATE = 30  # Hz (30Hz = envoi toutes les 33ms)
 PLAYER_FMT = "<3f3f3fBBBBf"  # 48 bytes: pos + vel + dir + rotY + anim + team + role + flags + tiredFactor
 BALL_FMT = "<3f3f3fbb2x"      # 40 bytes: pos + vel + rot + ownedTeam + ownedPlayer + pad
 OFFICIAL_FMT = "<3f3ffBBBB"   # 32 bytes: pos[3] + dir[3] + rotY + anim + team + role + flags
+CAMERA_FMT = "<3f4ff"         # 32 bytes: pos[3] + rot[4] + fov
 EVENT_FMT = "<IHHHH" + "BBBB" + "3f" + "I" + "2B" + "2x"  # 36 bytes with header
 
 # Pitch bounds (half-size)
@@ -138,10 +139,10 @@ class GFSimulator:
         self.ball_vel = [0.0, 0.0, 0.0]
 
     def pack_game_state(self):
-        """Pack GameState into 1224 bytes matching C++ DZFootProtocol.h"""
+        """Pack GameState into 1256 bytes matching C++ DZFootProtocol.h"""
         data = bytearray()
-        # Header (size = 1224)
-        data += struct.pack("<IHHHH", 0x54465A44, 1, 1, 1224, 0)
+        # Header (size = 1256)
+        data += struct.pack("<IHHHH", 0x54465A44, 1, 1, 1256, 0)
         # Body: tick + timestampUs + gameMode + gameFlags + score + timer
         data += struct.pack("<IQBB2Bf",
             self.tick,
@@ -180,7 +181,14 @@ class GFSimulator:
                 2,   # team: officials
                 orole,
                 1)   # flags: active
-        assert len(data) == 1224, f"GameState size mismatch: {len(data)} != 1224"
+
+        # Camera: pos[3] + rot[4] + fov = 32 bytes
+        data += struct.pack(CAMERA_FMT,
+            0.0, 5.0, -10.0,      # pos
+            0.0, 0.0, 0.0, 1.0,   # rot (Quaternion xyzw)
+            38.0)                 # fov
+
+        assert len(data) == 1256, f"GameState size mismatch: {len(data)} != 1256"
         return bytes(data)
 
     def pack_event(self, event):

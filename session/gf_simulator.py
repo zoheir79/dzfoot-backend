@@ -31,9 +31,11 @@ PLAYER_FMT = "<3f3f3fBBBBf"
 BALL_FMT = "<3f3f3fbb2x"
 # NetworkOfficialState: pos[3] + dir[3] + rotY + anim + team + role + flags = 32 bytes
 OFFICIAL_FMT = "<3f3ffBBBB"
-# GameStatePacket: header(12) + tick(4) + timestampUs(8) + gameMode(1) + gameFlags(1) + score[2](2) + timer(4) + ball(40) + 22*players(48*22)
+# NetworkCameraState: pos[3] + rot[4] + fov = 32 bytes
+CAMERA_FMT = "<3f4ff"
+# GameStatePacket: header(12) + tick(4) + timestampUs(8) + gameMode(1) + gameFlags(1) + score[2](2) + timer(4) + ball(40) + 22*players(48*22) + 3*officials(32*3) + camera(32) = 1256 bytes
 # Header is packed separately in send() so GAME_FMT is just the body after header
-BODY_FMT = "IQBB2Bf" + BALL_FMT[1:] + 22 * PLAYER_FMT[1:]
+BODY_FMT = "IQBB2Bf" + BALL_FMT[1:] + 22 * PLAYER_FMT[1:] + 3 * OFFICIAL_FMT[1:] + CAMERA_FMT[1:]
 # MatchEventPacket: header(12) + eventType(1) + team(1) + playerIdx(1) + extra(1) + pos[3](12) + tick(4) + score[2](2) + pad[2]
 EVENT_FMT = "<IHHHH" + "BBBB" + "3f" + "I" + "2B" + "2x"
 
@@ -278,11 +280,11 @@ class GFSimulator:
         self.ball_vel = [0.0, 0.0, 0.0]
 
     def pack_game_state(self):
-        """Pack GameState into 1224 bytes matching C++ DZFootProtocol.h"""
+        """Pack GameState into 1256 bytes matching C++ DZFootProtocol.h"""
         data = bytearray()
 
-        # Packet header: magic=0x54465A44 'DZFT', version=1, type=1 (GAME_STATE), size=1224, flags=0
-        data += struct.pack("<IHHHH", 0x54465A44, 1, 1, 1224, 0)
+        # Packet header: magic=0x54465A44 'DZFT', version=1, type=1 (GAME_STATE), size=1256, flags=0
+        data += struct.pack("<IHHHH", 0x54465A44, 1, 1, 1256, 0)
 
         # tick + timestampUs + gameMode + gameFlags + score + timer
         data += struct.pack("<IQBB2Bf",
@@ -332,7 +334,13 @@ class GFSimulator:
                 orole,
                 1)   # flags: active
 
-        assert len(data) == 1224, f"GameState size mismatch: {len(data)} != 1224"
+        # Camera: pos[3] + rot[4] + fov = 32 bytes
+        data += struct.pack(CAMERA_FMT,
+            0.0, 5.0, -10.0,      # pos
+            0.0, 0.0, 0.0, 1.0,   # rot (Quaternion xyzw)
+            38.0)                 # fov
+
+        assert len(data) == 1256, f"GameState size mismatch: {len(data)} != 1256"
         return bytes(data)
 
     def pack_event(self, event):
