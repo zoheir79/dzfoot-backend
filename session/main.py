@@ -185,6 +185,7 @@ async def _bot_relay_for_room(room_id: str):
             try:
                 payload = getattr(data_packet, "data", None) or getattr(data_packet, "payload", None)
                 topic = getattr(data_packet, "topic", "")
+                print(f"[Bot {room_id}] data_received topic='{topic}' payload_size={len(payload) if payload else 0}", flush=True)
                 if topic == "in" and payload is not None:
                     # Forward input to Redis as binary
                     asyncio.create_task(_forward_input_to_redis(room_id, bytes(payload)))
@@ -235,6 +236,8 @@ async def _forward_input_to_redis(room_id: str, payload: bytes):
         # Prefix room_id (36 bytes padded) + binary payload
         room_prefix = room_id.encode("utf-8").ljust(36, b"\x00")[:36]
         await redis.publish("gf.input", room_prefix + payload)
+        # Diagnostic: log every forwarded input so we can verify Android -> LiveKit -> bot -> Redis
+        print(f"[Session] Forwarded input to Redis gf.input room={room_id} payload_size={len(payload)}", flush=True)
     except Exception as e:
         print(f"[Session] Failed to forward input to Redis: {e}", flush=True)
 
