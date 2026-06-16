@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -61,6 +63,9 @@ services:
       STATS_SERVICE_URL: http://stats:8000
       CATALOG_URL: http://catalog:8000
       GF_CONFIG_DIR: /tmp/gf_configs
+    volumes:
+      - ./logs/session:/app/logs
+    command: ["/bin/sh", "-c", "mkdir -p /app/logs && exec uvicorn main:app --host 0.0.0.0 --port 8000 >> /app/logs/session.log 2>&1"]
     depends_on:
       postgres:
         condition: service_healthy

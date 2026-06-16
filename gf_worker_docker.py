@@ -2,12 +2,22 @@
 """DZFoot GF Worker - Docker mode via docker-py"""
 import os, sys, json, time, signal, threading
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://192.168.199.134:6379")
-STATS_URL = os.getenv("STATS_URL", "http://192.168.199.134:8004")
+REDIS_URL = os.getenv("REDIS_URL")
+STATS_URL = os.getenv("STATS_URL")
 LIVEKIT_URL = os.getenv("LIVEKIT_URL", "")
 GF_IMAGE = os.getenv("GF_IMAGE", "dzfoot-gf-server:prod")
 GF_NETWORK = os.getenv("GF_NETWORK", "dzfoot-backend_default")
+GF_LOGS_HOST_PATH = os.getenv("GF_LOGS_HOST_PATH", "/var/log/dzfoot/gf")
 WORKER_ID = os.getenv("HOSTNAME", "worker-docker")
+
+missing = []
+if not REDIS_URL:
+    missing.append("REDIS_URL")
+if not STATS_URL:
+    missing.append("STATS_URL")
+if missing:
+    print(f"[GF Docker Worker] FATAL: Required environment variables not set: {', '.join(missing)}", file=sys.stderr)
+    sys.exit(1)
 
 print(f"[GF Docker Worker {WORKER_ID}] Starting. Redis: {REDIS_URL}")
 
@@ -130,13 +140,17 @@ while running:
         ]
         if player_a: cmd.append(f"--player-a={player_a}")
         if player_b: cmd.append(f"--player-b={player_b}")
+        log_file = f"/app/logs/gf_server_{room_id}.log"
         env = {
             "LIVEKIT_URL": LIVEKIT_URL,
             "LIVEKIT_TOKEN": token,
             "REDIS_URL": REDIS_URL,
-            "STATS_URL": STATS_URL
+            "STATS_URL": STATS_URL,
+            "GF_LOG_FILE": log_file
         }
         # Write match_config to a host file and mount it as volume into container
+        from docker.types import Mount
+        mounts = [Mount(target="/app/logs", source=GF_LOGS_HOST_PATH, type="bind")]
         volumes = {}
         if match_config:
             config_host_path = f"/tmp/gf_{room_id}.json"
@@ -145,10 +159,19 @@ while running:
             volumes[config_host_path] = {"bind": "/tmp/match_config.json", "mode": "ro"}
             cmd.append("--config-file=/tmp/match_config.json")
             print(f"[GF Docker Worker {WORKER_ID}] Match config written to {config_host_path}")
+            # Schedule cleanup after container removal
+            def _cleanup_config(path):
+                try:
+                    os.remove(path)
+                except Exception:
+                    pass
+            import atexit
+            atexit.register(_cleanup_config, config_host_path)
 
         container = client.containers.run(
             image=GF_IMAGE, command=cmd, name=f"gf-{room_id}",
-            network=GF_NETWORK, environment=env, volumes=volumes,
+            network=GF_NETWORK, environment=env, volumes=volumes, mounts=mounts,
+            entrypoint="/app/run_logged.sh",
             detach=True, remove=False)
         print(f"[GF Docker Worker {WORKER_ID}] Container {container.id[:12]} launched")
 
@@ -156,7 +179,17 @@ while running:
         time.sleep(5)
         container.reload()
         if container.status != "running":
-            crash_logs = container.logs(stdout=True, stderr=True, tail=100).decode("utf-8", errors="replace")
+            crash_logs = ""
+            try:
+                bits, _ = container.get_archive(log_file)
+                import tarfile, io
+                data = b"".join(bits)
+                tar = tarfile.open(fileobj=io.BytesIO(data), mode="r:*")
+                for member in tar:
+                    crash_logs = tar.extractfile(member).read().decode("utf-8", errors="replace")[-4000:]
+                    break
+            except Exception:
+                crash_logs = container.logs(stdout=True, stderr=True, tail=100).decode("utf-8", errors="replace")
             print(f"[GF Docker Worker {WORKER_ID}] CRASH detected for {room_id}! Logs:\n{crash_logs}", flush=True)
             r.publish("gf.crashed", room_id)
             try:

@@ -33,6 +33,8 @@ services:
     restart: unless-stopped
 
   session:
+    volumes:
+      - /var/log/dzfoot/session:/app/logs
     deploy:
       resources:
         limits:
@@ -75,15 +77,5 @@ services:
           - node.role == manager
     restart: unless-stopped
 
-# GF Worker pool (optional — start separately on VMs with GF binary)
-# These workers consume match spawn requests from Redis queue
-# Session Service publishes to Redis instead of local subprocess
-#  gf-worker:
-#    build: ./gf-worker  # Thin wrapper that polls Redis and starts GF
-#    deploy:
-#      replicas: 2
-#      resources:
-#        limits:
-#          cpus: '2.0'
-#          memory: 2G
-#    restart: unless-stopped
+# GF Worker runs on VM1 (separate VM from backend)
+# See docker-compose.vm1.yml in dzfoot-gf-server repo

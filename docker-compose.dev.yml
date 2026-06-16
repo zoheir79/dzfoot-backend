@@ -61,10 +61,10 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://dzfoot:dzfoot@postgres:5432/dzfoot
       REDIS_URL: redis://redis:6379
-      LIVEKIT_URL: https://orch.adexgenie.ai
-      LIVEKIT_API_KEY: APIAVkwUwQPYRf4
-      LIVEKIT_API_SECRET: WiKnaaaPUfvcG4Thviw6w2XPNFWvBbJuS9sNjfzhgS8
-      GF_SPAWN_MODE: queue
+      LIVEKIT_URL: ${LIVEKIT_URL}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      GF_SPAWN_MODE: ${GF_SPAWN_MODE:-queue}
       GF_BINARY_PATH: ${GF_BINARY_PATH}
       STATS_SERVICE_URL: http://stats:8000
       CATALOG_URL: http://catalog:8000
@@ -73,6 +73,7 @@ services:
     volumes:
       - ./session:/app
       - gf_configs:/app/configs
+      - ./logs/session:/app/logs
       # - ${GF_BINARY_PATH}:/usr/local/bin/gf_server:ro  # Mount GF binary (uncomment for local mode)
     depends_on:
       postgres:
@@ -81,7 +82,7 @@ services:
         condition: service_healthy
     # NOTE: --reload disabled because uvicorn reloads kill spawned simulator child processes.
     # Restart the container manually after code changes: docker restart dzfoot-backend-session-1
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    command: ["/bin/sh", "-c", "mkdir -p /app/logs && exec uvicorn main:app --host 0.0.0.0 --port 8000 >> /app/logs/session.log 2>&1"]
 
   matchmaking:
     build: ./matchmaking
@@ -141,10 +142,13 @@ services:
     environment:
       REDIS_URL: redis://redis:6379
       STATS_URL: http://stats:8000
-      LIVEKIT_URL: https://orch.adexgenie.ai
+      LIVEKIT_URL: ${LIVEKIT_URL}
       GF_IMAGE: dzfoot-gf-server:prod
       GF_NETWORK: dzfoot-backend_default
-    entrypoint: ["/bin/bash", "-c", "apt-get update -qq && apt-get install -y -qq python3-pip && pip3 install redis docker -q && python3 /app/gf_worker_docker.py"]
+      # On Windows: set this env var explicitly before docker-compose up, e.g.:
+      # $env:GF_LOGS_HOST_PATH = "e:\dzfoot\repos\dzfoot-backend\logs\gf"
+      GF_LOGS_HOST_PATH: ${GF_LOGS_HOST_PATH:-/tmp/gf_logs}
+    command: ["python3", "/app/gf_worker_docker.py"]
     depends_on:
       redis:
         condition: service_healthy
