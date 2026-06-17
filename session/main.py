@@ -3,6 +3,7 @@ import asyncio
 import subprocess
 import uuid
 import json
+import struct
 from typing import Optional
 from datetime import datetime, timedelta
 
@@ -94,9 +95,69 @@ async def _pubsub_listener(channel: str, handler):
         await ps.close()
 
 
+_DZ_MAGIC = 0x54465A44
+_EVENT_NAMES = {
+    0: "GOAL", 1: "YELLOW_CARD", 2: "RED_CARD", 3: "SUBSTITUTION",
+    4: "CORNER", 5: "THROW_IN", 6: "FREE_KICK", 7: "PENALTY",
+    8: "KICK_OFF", 9: "END_MATCH", 10: "HALF_TIME", 11: "GOAL_KICK",
+    12: "OFFSIDE", 13: "FOUL", 14: "POSSESSION_CHANGE", 15: "SHOT",
+    16: "PASS", 17: "TACKLE",
+}
+
+
+def _parse_gs_summary(payload: bytes) -> str:
+    """Extract tick, score, timer, ball pos from a GameState payload."""
+    if len(payload) < 44:
+        return "invalid"
+    try:
+        magic, ver, ptype, size, flags = struct.unpack_from("<IHHHH", payload, 0)
+        if magic != _DZ_MAGIC or ptype != 1:
+            return "bad_header"
+        tick = struct.unpack_from("<I", payload, 12)[0]
+        score_a, score_b = struct.unpack_from("<BB", payload, 26)
+        timer = struct.unpack_from("<f", payload, 28)[0]
+        bx, by, bz = struct.unpack_from("<3f", payload, 32)
+        return f"tick={tick} score={score_a}-{score_b} timer={timer:.1f}s ball=({bx:.2f},{by:.2f},{bz:.2f})"
+    except Exception:
+        return "parse_err"
+
+
+def _parse_ev_summary(payload: bytes) -> str:
+    """Extract event type, team, player, score from a MatchEvent payload."""
+    if len(payload) < 20:
+        return "invalid"
+    try:
+        magic, ver, ptype, size, flags = struct.unpack_from("<IHHHH", payload, 0)
+        if magic != _DZ_MAGIC or ptype != 2:
+            return "bad_header"
+        ev_type, team, player, extra = struct.unpack_from("<BBBB", payload, 12)
+        score_a, score_b = struct.unpack_from("<BB", payload, 32)
+        name = _EVENT_NAMES.get(ev_type, f"UNKNOWN({ev_type})")
+        return f"event={name} team={team} player={player} score={score_a}-{score_b}"
+    except Exception:
+        return "parse_err"
+
+
+def _parse_tac_summary(payload: bytes) -> str:
+    """Extract tick and match phase from a TacticalState payload."""
+    if len(payload) < 30:
+        return "invalid"
+    try:
+        magic, ver, ptype, size, flags = struct.unpack_from("<IHHHH", payload, 0)
+        if magic != _DZ_MAGIC or ptype != 5:
+            return "bad_header"
+        tick = struct.unpack_from("<I", payload, 12)[0]
+        phase = struct.unpack_from("<B", payload, 24)[0]
+        return f"tick={tick} phase={phase}"
+    except Exception:
+        return "parse_err"
+
+
 async def _binary_pubsub_relay(redis_channel: str, lk_topic: str, kind):
     """Relay binary data from Redis pubsub to LiveKit room via send_data.
     Message format: first 36 bytes = room_id (padded), rest = binary payload."""
+    # Throttle counters: room_id -> count
+    log_counter = {}
     while True:
         try:
             ps = await aioredis.from_url(REDIS_URL, decode_responses=False)
@@ -125,7 +186,6 @@ async def _binary_pubsub_relay(redis_channel: str, lk_topic: str, kind):
                         else:
                             # Orphan match (not in active_matches) — skip silently
                             continue
-                    print(f"[gamestates] RELAY_IN redis={redis_channel} room={room_id} topic={lk_topic} size={len(payload)}", flush=True)
                     try:
                         pub_room = room_publishers.get(room_id)
                         if pub_room is None:
@@ -136,7 +196,25 @@ async def _binary_pubsub_relay(redis_channel: str, lk_topic: str, kind):
                             reliable=(kind == DataPacketKind.KIND_RELIABLE),
                             topic=lk_topic,
                         )
-                        print(f"[gamestates] RELAY_OUT lk_topic={lk_topic} room={room_id} size={len(payload)}", flush=True)
+                        # --- Smart logging: content-aware, throttled ---
+                        cnt = log_counter.get(room_id, 0) + 1
+                        log_counter[room_id] = cnt
+                        if lk_topic == "gs":
+                            # Log every ~1s (60 ticks @ 60Hz) + always on score/timer change (simplified: every 60)
+                            if (cnt % 60) == 1:
+                                summary = _parse_gs_summary(payload)
+                                print(f"[gamestates] STATE room={room_id} {summary}", flush=True)
+                        elif lk_topic == "ev":
+                            # Events are important: log every one
+                            summary = _parse_ev_summary(payload)
+                            print(f"[gamestates] EVENT room={room_id} {summary}", flush=True)
+                        elif lk_topic == "setup":
+                            # Setup is sent once
+                            print(f"[gamestates] SETUP room={room_id} size={len(payload)}", flush=True)
+                        elif lk_topic == "tac":
+                            if (cnt % 60) == 1:
+                                summary = _parse_tac_summary(payload)
+                                print(f"[gamestates] TACTICAL room={room_id} {summary}", flush=True)
                     except Exception as e:
                         print(f"[gamestates] RELAY_ERR redis={redis_channel} room={room_id}: {e}", flush=True)
             finally:
