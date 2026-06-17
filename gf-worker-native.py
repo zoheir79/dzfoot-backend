@@ -98,7 +98,8 @@ def monitor_process(proc: subprocess.Popen, room_id: str, log_file):
             pass
         if exit_code != 0:
             try:
-                with open(f"/var/log/gf_{room_id}.log", "r", encoding="utf-8", errors="replace") as f:
+                crash_log_path = os.path.join("/var/log/dzfoot/gf", f"gf_{room_id}.log")
+                with open(crash_log_path, "r", encoding="utf-8", errors="replace") as f:
                     logs = f.read(2000)
                 print(
                     f"[GF Native Worker {WORKER_ID}] {room_id} logs:\n{logs}",
@@ -165,8 +166,21 @@ while running:
             f"[GF Native Worker {WORKER_ID}] Spawning {room_id}",
             flush=True,
         )
-        log_path = f"/var/log/gf_{room_id}.log"
-        log_file = open(log_path, "w")
+        log_dir = "/var/log/dzfoot/gf"
+        os.makedirs(log_dir, exist_ok=True)
+        log_path = os.path.join(log_dir, f"gf_{room_id}.log")
+        try:
+            log_file = open(log_path, "w")
+        except OSError as e:
+            print(
+                f"[GF Native Worker {WORKER_ID}] FAILED to open log {log_path}: {e}",
+                flush=True,
+            )
+            raise
+        print(
+            f"[GF Native Worker {WORKER_ID}] Log file: {log_path}",
+            flush=True,
+        )
         proc = subprocess.Popen(
             cmd,
             stdout=log_file,
