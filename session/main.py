@@ -99,11 +99,10 @@ async def _binary_pubsub_relay(redis_channel: str, lk_topic: str, kind):
     Message format: first 36 bytes = room_id (padded), rest = binary payload."""
     while True:
         try:
-            print(f"[Session] Starting relay {redis_channel} -> {lk_topic}...", flush=True)
             ps = await aioredis.from_url(REDIS_URL, decode_responses=False)
             pubsub = ps.pubsub()
             await pubsub.subscribe(redis_channel)
-            print(f"[Session] Relay started: Redis:{redis_channel} -> LiveKit:{lk_topic}", flush=True)
+            print(f"[gamestates] RELAY_START Redis:{redis_channel} -> LiveKit:{lk_topic}", flush=True)
             try:
                 async for message in pubsub.listen():
                     if message["type"] != "message":
@@ -126,23 +125,25 @@ async def _binary_pubsub_relay(redis_channel: str, lk_topic: str, kind):
                         else:
                             # Orphan match (not in active_matches) — skip silently
                             continue
+                    print(f"[gamestates] RELAY_IN redis={redis_channel} room={room_id} topic={lk_topic} size={len(payload)}", flush=True)
                     try:
                         pub_room = room_publishers.get(room_id)
                         if pub_room is None:
-                            print(f"[Relay {redis_channel}] No Room publisher for {room_id}, skipping", flush=True)
+                            print(f"[gamestates] RELAY_SKIP room={room_id} no_publisher", flush=True)
                             continue
                         await pub_room.local_participant.publish_data(
                             payload,
                             reliable=(kind == DataPacketKind.KIND_RELIABLE),
                             topic=lk_topic,
                         )
+                        print(f"[gamestates] RELAY_OUT lk_topic={lk_topic} room={room_id} size={len(payload)}", flush=True)
                     except Exception as e:
-                        print(f"[Relay {redis_channel}] publish_data error for room {room_id}: {e}", flush=True)
+                        print(f"[gamestates] RELAY_ERR redis={redis_channel} room={room_id}: {e}", flush=True)
             finally:
                 await ps.close()
         except Exception as e:
             import traceback
-            print(f"[Relay {redis_channel}] FATAL error: {e}\n{traceback.format_exc()}", flush=True)
+            print(f"[gamestates] RELAY_FATAL redis={redis_channel}: {e}\n{traceback.format_exc()}", flush=True)
             await asyncio.sleep(5)  # retry after 5 seconds
 
 
@@ -185,12 +186,12 @@ async def _bot_relay_for_room(room_id: str):
             try:
                 payload = getattr(data_packet, "data", None) or getattr(data_packet, "payload", None)
                 topic = getattr(data_packet, "topic", "")
-                print(f"[Bot {room_id}] data_received topic='{topic}' payload_size={len(payload) if payload else 0}", flush=True)
+                print(f"[gamestates] BOT_IN room={room_id} topic={topic} size={len(payload) if payload else 0}", flush=True)
                 if topic == "in" and payload is not None:
                     # Forward input to Redis as binary
                     asyncio.create_task(_forward_input_to_redis(room_id, bytes(payload)))
             except Exception as e:
-                print(f"[Bot {room_id}] data_received error: {e}", flush=True)
+                print(f"[gamestates] BOT_ERR room={room_id}: {e}", flush=True)
 
         @room.on("participant_disconnected")
         def on_participant_disconnected(participant):
@@ -236,10 +237,9 @@ async def _forward_input_to_redis(room_id: str, payload: bytes):
         # Prefix room_id (36 bytes padded) + binary payload
         room_prefix = room_id.encode("utf-8").ljust(36, b"\x00")[:36]
         await redis.publish("gf.input", room_prefix + payload)
-        # Diagnostic: log every forwarded input so we can verify Android -> LiveKit -> bot -> Redis
-        print(f"[Session] Forwarded input to Redis gf.input room={room_id} payload_size={len(payload)}", flush=True)
+        print(f"[gamestates] FORWARD redis=gf.input room={room_id} size={len(payload)}", flush=True)
     except Exception as e:
-        print(f"[Session] Failed to forward input to Redis: {e}", flush=True)
+        print(f"[gamestates] FORWARD_ERR room={room_id}: {e}", flush=True)
 
 
 async def _handle_gf_ready(room_id):
@@ -602,9 +602,10 @@ async def create_match(req: CreateMatchRequest):
 
     mode = req.mode if req.mode in ("1v1", "vs_ai", "ai_vs_ai") else "vs_ai"
     if req.mode == "ai_vs_ai":
-        print(f"[Session] ai_vs_ai mode requested — bot vs bot, no human player")
+        print(f"[gamestates] MATCH_CONFIG ai_vs_ai mode requested — bot vs bot, no human player", flush=True)
 
     match_config = await _build_match_config(room_id, req.team_a, req.team_b, req.duration, mode, req.stadium_id)
+    print(f"[gamestates] MATCH_CONFIG room={room_id} mode={mode} team_a={req.team_a} team_b={req.team_b} left_players={len(match_config.get('left_team',{}).get('players',[]))} right_players={len(match_config.get('right_team',{}).get('players',[]))}", flush=True)
 
     # 1. Create LiveKit room
     await lkapi.room.create_room(
