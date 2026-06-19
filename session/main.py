@@ -43,6 +43,7 @@ CONFIG_DIR = os.getenv("GF_CONFIG_DIR", "/tmp/gf_configs")
 os.makedirs(CONFIG_DIR, exist_ok=True)
 
 redis: Optional[aioredis.Redis] = None
+binary_redis: Optional[aioredis.Redis] = None  # decode_responses=False for binary pubsub
 lkapi: Optional[LiveKitAPI] = None
 active_matches: dict = {}
 room_publishers: dict = {}   # room_id -> livekit.rtc.Room (for data publishing)
@@ -51,8 +52,9 @@ _background_tasks: list = []  # Strong references to prevent GC
 
 @app.on_event("startup")
 async def startup():
-    global redis, lkapi
+    global redis, binary_redis, lkapi
     redis = await aioredis.from_url(REDIS_URL, decode_responses=True)
+    binary_redis = await aioredis.from_url(REDIS_URL, decode_responses=False)
     lkapi = LiveKitAPI(url=LK_URL, api_key=LK_KEY, api_secret=LK_SECRET)
     # Start background listeners (each with dedicated Redis connection)
     # Store strong references so Python 3.12+ doesn't garbage-collect them
@@ -266,6 +268,14 @@ async def _bot_relay_for_room(room_id: str):
                 topic = getattr(data_packet, "topic", "")
                 print(f"[gamestates] BOT_IN room={room_id} topic={topic} size={len(payload) if payload else 0}", flush=True)
                 if topic == "in" and payload is not None:
+                    # Hex dump raw bytes around buttons field for diagnosis
+                    if len(payload) >= 26:
+                        b = bytes(payload)
+                        buttons = int.from_bytes(b[20:22], 'little')
+                        if buttons != 0:
+                            print(f"[gamestates] BOT_HEX room={room_id} buttons=0x{buttons:04X} "
+                                  f"bytes[18..25]={b[18]:02X}{b[19]:02X} {b[20]:02X}{b[21]:02X} {b[22]:02X}{b[23]:02X} {b[24]:02X}{b[25]:02X} "
+                                  f"type={type(payload).__name__}", flush=True)
                     # Forward input to Redis as binary
                     asyncio.create_task(_forward_input_to_redis(room_id, bytes(payload)))
             except Exception as e:
@@ -314,7 +324,7 @@ async def _forward_input_to_redis(room_id: str, payload: bytes):
     try:
         # Prefix room_id (36 bytes padded) + binary payload
         room_prefix = room_id.encode("utf-8").ljust(36, b"\x00")[:36]
-        await redis.publish("gf.input", room_prefix + payload)
+        await binary_redis.publish("gf.input", room_prefix + payload)
         print(f"[gamestates] FORWARD redis=gf.input room={room_id} size={len(payload)}", flush=True)
     except Exception as e:
         print(f"[gamestates] FORWARD_ERR room={room_id}: {e}", flush=True)
