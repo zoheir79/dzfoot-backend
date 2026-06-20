@@ -65,7 +65,7 @@ services:
       GF_CONFIG_DIR: /tmp/gf_configs
     volumes:
       - ./logs/session:/app/logs
-    command: ["/bin/sh", "-c", "mkdir -p /app/logs && exec uvicorn main:app --host 0.0.0.0 --port 8000 >> /app/logs/session.log 2>&1"]
+    command: ["/bin/sh", "-c", "mkdir -p /app/logs && exec uvicorn main:app --host 0.0.0.0 --port 8000"]
     depends_on:
       postgres:
         condition: service_healthy

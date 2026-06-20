@@ -4,6 +4,7 @@ import subprocess
 import uuid
 import json
 import struct
+import logging
 from typing import Optional
 from datetime import datetime, timedelta
 
@@ -42,6 +43,51 @@ CONFIG_DIR = os.getenv("GF_CONFIG_DIR", "/tmp/gf_configs")
 
 os.makedirs(CONFIG_DIR, exist_ok=True)
 
+# ============================================================================
+# Logging: stdout (container) + host file + per-match file
+# ============================================================================
+LOG_DIR = os.getenv("LOG_DIR", "/app/logs")
+MATCH_LOG_DIR = os.path.join(LOG_DIR, "match")
+os.makedirs(LOG_DIR, exist_ok=True)
+os.makedirs(MATCH_LOG_DIR, exist_ok=True)
+
+# Main logger
+logger = logging.getLogger("session")
+logger.setLevel(logging.INFO)
+log_formatter = logging.Formatter("%(asctime)s UTC [%(levelname)s] %(message)s")
+log_formatter.default_time_converter = datetime.utcfromtimestamp
+
+# Console -> container logs
+_console_handler = logging.StreamHandler()
+_console_handler.setFormatter(log_formatter)
+logger.addHandler(_console_handler)
+
+# Main file -> host copy
+_main_file_handler = logging.FileHandler(os.path.join(LOG_DIR, "session.log"), mode="a")
+_main_file_handler.setFormatter(log_formatter)
+logger.addHandler(_main_file_handler)
+
+
+def _match_log_path(room_id: str) -> str:
+    safe = room_id.replace("/", "_").replace("\\", "_")
+    return os.path.join(MATCH_LOG_DIR, f"{safe}.log")
+
+
+def match_log(room_id: str, message: str, level: int = logging.INFO):
+    """Log to console, main session.log and per-match file."""
+    logger.log(level, f"[{room_id}] {message}")
+    try:
+        with open(_match_log_path(room_id), "a", encoding="utf-8") as f:
+            f.write(f"{datetime.utcnow().isoformat()}Z [{logging.getLevelName(level)}] {message}\n")
+    except Exception as e:
+        logger.error(f"[LOG_ERR] failed to write match log for {room_id}: {e}")
+
+
+def app_log(message: str, level: int = logging.INFO):
+    """Log to console and main session.log."""
+    logger.log(level, message)
+
+
 redis: Optional[aioredis.Redis] = None
 binary_redis: Optional[aioredis.Redis] = None  # decode_responses=False for binary pubsub
 lkapi: Optional[LiveKitAPI] = None
@@ -70,7 +116,7 @@ async def startup():
     _background_tasks.append(asyncio.create_task(_input_relay_bot()))
     _background_tasks.append(asyncio.create_task(check_worker_health()))
     _background_tasks.append(asyncio.create_task(check_match_timeouts()))
-    print(f"[Session] Started {len(_background_tasks)} background tasks", flush=True)
+    app_log(f"[Session] Started {len(_background_tasks)} background tasks")
 
 
 @app.get("/health")
@@ -268,18 +314,16 @@ async def _bot_relay_for_room(room_id: str):
                 topic = getattr(data_packet, "topic", "")
                 print(f"[gamestates] BOT_IN room={room_id} topic={topic} size={len(payload) if payload else 0}", flush=True)
                 if topic == "in" and payload is not None:
-                    # Hex dump raw bytes around buttons field for diagnosis
-                    if len(payload) >= 26:
-                        b = bytes(payload)
-                        buttons = int.from_bytes(b[20:22], 'little')
-                        if buttons != 0:
-                            print(f"[gamestates] BOT_HEX room={room_id} buttons=0x{buttons:04X} "
-                                  f"bytes[18..25]={b[18]:02X}{b[19]:02X} {b[20]:02X}{b[21]:02X} {b[22]:02X}{b[23]:02X} {b[24]:02X}{b[25]:02X} "
-                                  f"type={type(payload).__name__}", flush=True)
+                    b = bytes(payload)
+                    buttons = int.from_bytes(b[20:22], 'little') if len(payload) >= 22 else 0
+                    # Always log received button code (hex) and what we forward to GF
+                    match_log(room_id, f"LK_IN buttons=0x{buttons:04X} size={len(b)} bytes[18..25]={b[18]:02X if len(b) > 18 else '--'}{b[19]:02X if len(b) > 19 else '--'} {b[20]:02X if len(b) > 20 else '--'}{b[21]:02X if len(b) > 21 else '--'}")
+                    print(f"[gamestates] LK_IN room={room_id} buttons=0x{buttons:04X} size={len(b)}", flush=True)
                     # Forward input to Redis as binary
-                    asyncio.create_task(_forward_input_to_redis(room_id, bytes(payload)))
+                    asyncio.create_task(_forward_input_to_redis(room_id, b, buttons))
             except Exception as e:
                 print(f"[gamestates] BOT_ERR room={room_id}: {e}", flush=True)
+                match_log(room_id, f"BOT_ERR: {e}", level=logging.ERROR)
 
         @room.on("participant_disconnected")
         def on_participant_disconnected(participant):
@@ -313,21 +357,24 @@ async def _cleanup_orphan_match(room_id: str):
     await asyncio.sleep(10)  # Grace period for reconnect
     if room_id in active_matches:
         print(f"[Session] Cleaning up orphan match {room_id} (no player after 10s)", flush=True)
+        match_log(room_id, "MATCH_ORPHAN_CLEANUP")
         await redis.publish("gf.crashed", room_id)
         active_matches.pop(room_id, None)
         room_publishers.pop(room_id, None)
         await redis.delete(f"room:{room_id}")
 
 
-async def _forward_input_to_redis(room_id: str, payload: bytes):
+async def _forward_input_to_redis(room_id: str, payload: bytes, buttons: int = 0):
     """Forward binary input data to Redis gf.input channel with room_id prefix."""
     try:
         # Prefix room_id (36 bytes padded) + binary payload
         room_prefix = room_id.encode("utf-8").ljust(36, b"\x00")[:36]
         await binary_redis.publish("gf.input", room_prefix + payload)
         print(f"[gamestates] FORWARD redis=gf.input room={room_id} size={len(payload)}", flush=True)
+        match_log(room_id, f"GF_OUT buttons=0x{buttons:04X} size={len(payload)}")
     except Exception as e:
         print(f"[gamestates] FORWARD_ERR room={room_id}: {e}", flush=True)
+        match_log(room_id, f"FORWARD_ERR: {e}", level=logging.ERROR)
 
 
 async def _handle_gf_ready(room_id):
@@ -335,10 +382,12 @@ async def _handle_gf_ready(room_id):
         active_matches[room_id]["status"] = "running"
         active_matches[room_id]["gf_ready_at"] = datetime.utcnow().isoformat()
         print(f"[Session] GF ready for room {room_id}")
+        match_log(room_id, "GF_READY")
 
 
 async def _handle_gf_crashed(room_id):
     print(f"[Session] GF crashed for room {room_id}")
+    match_log(room_id, "GF_CRASHED", level=logging.ERROR)
     if room_id in active_matches:
         active_matches[room_id]["status"] = "crashed"
         active_matches[room_id]["crashed_at"] = datetime.utcnow().isoformat()
@@ -356,6 +405,7 @@ async def _cleanup_after_crash(room_id):
 
 async def _handle_gf_finished(room_id):
     print(f"[Session] GF finished for room {room_id}")
+    match_log(room_id, "GF_FINISHED")
     if room_id in active_matches:
         active_matches[room_id]["status"] = "finished"
         active_matches[room_id]["finished_at"] = datetime.utcnow().isoformat()
@@ -694,6 +744,7 @@ async def create_match(req: CreateMatchRequest):
 
     match_config = await _build_match_config(room_id, req.team_a, req.team_b, req.duration, mode, req.stadium_id)
     print(f"[gamestates] MATCH_CONFIG room={room_id} mode={mode} team_a={req.team_a} team_b={req.team_b} left_players={len(match_config.get('left_team',{}).get('players',[]))} right_players={len(match_config.get('right_team',{}).get('players',[]))}", flush=True)
+    match_log(room_id, f"MATCH_CREATE mode={mode} team_a={req.team_a} team_b={req.team_b} duration={req.duration}")
 
     # 1. Create LiveKit room
     await lkapi.room.create_room(
@@ -859,6 +910,7 @@ async def join_match(req: JoinMatchRequest):
     await redis.setex(f"room:{room_id}", 3600, json.dumps(info))
 
     print(f"[Session] Player {req.player_id} joined match {room_id}. GF spawned. Match running.")
+    match_log(room_id, f"MATCH_JOIN player_b={req.player_id}")
     return {"room_id": room_id, "livekit_url": LK_URL, "token": player_b_token, "status": "running"}
 
 

@@ -82,7 +82,7 @@ services:
         condition: service_healthy
     # NOTE: --reload disabled because uvicorn reloads kill spawned simulator child processes.
     # Restart the container manually after code changes: docker restart dzfoot-backend-session-1
-    command: ["/bin/sh", "-c", "mkdir -p /app/logs && exec uvicorn main:app --host 0.0.0.0 --port 8000 >> /app/logs/session.log 2>&1"]
+    command: ["/bin/sh", "-c", "mkdir -p /app/logs && exec uvicorn main:app --host 0.0.0.0 --port 8000"]
 
   matchmaking:
     build: ./matchmaking
