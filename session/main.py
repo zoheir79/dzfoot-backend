@@ -317,7 +317,8 @@ async def _bot_relay_for_room(room_id: str):
                     b = bytes(payload)
                     buttons = int.from_bytes(b[20:22], 'little') if len(payload) >= 22 else 0
                     # Always log received button code (hex) and what we forward to GF
-                    match_log(room_id, f"LK_IN buttons=0x{buttons:04X} size={len(b)} bytes[18..25]={b[18]:02X if len(b) > 18 else '--'}{b[19]:02X if len(b) > 19 else '--'} {b[20]:02X if len(b) > 20 else '--'}{b[21]:02X if len(b) > 21 else '--'}")
+                    dump = b[18:26].hex(' ', 2).upper() if len(b) >= 26 else b[18:26].hex().upper()
+                    match_log(room_id, f"LK_IN buttons=0x{buttons:04X} size={len(b)} bytes[18..25]={dump}")
                     print(f"[gamestates] LK_IN room={room_id} buttons=0x{buttons:04X} size={len(b)}", flush=True)
                     # Forward input to Redis as binary
                     asyncio.create_task(_forward_input_to_redis(room_id, b, buttons))
