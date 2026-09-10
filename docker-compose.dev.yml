@@ -12,7 +12,7 @@ services:
       POSTGRES_PASSWORD: dzfoot
       POSTGRES_DB: dzfoot
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata_dev:/var/lib/postgresql/data
       - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
@@ -148,6 +148,7 @@ services:
       # On Windows: set this env var explicitly before docker-compose up, e.g.:
       # $env:GF_LOGS_HOST_PATH = "e:\dzfoot\repos\dzfoot-backend\logs\gf"
       GF_LOGS_HOST_PATH: ${GF_LOGS_HOST_PATH:-/tmp/gf_logs}
+    entrypoint: [""]  # override Dockerfile ENTRYPOINT ["gf_server"]
     command: ["python3", "/app/gf_worker_docker.py"]
     depends_on:
       redis:
