@@ -23,7 +23,7 @@ print(f"[GF Docker Worker {WORKER_ID}] Starting. Redis: {REDIS_URL}")
 
 import redis
 import docker
-from docker.types import Mount
+from docker.types import Mount, LogConfig
 import tarfile, io
 
 r = redis.from_url(REDIS_URL)
@@ -178,6 +178,8 @@ while running:
             network=GF_NETWORK, environment=env, volumes=volumes, mounts=mounts,
             labels={GF_CONTAINER_LABEL: "true"},
             entrypoint="/app/run_logged.sh",
+            log_config=LogConfig(type=LogConfig.types.JSON,
+                                 config={"max-size": "10m", "max-file": "3"}),
             detach=True, remove=False)
         active_containers[room_id] = container
         print(f"[GF Docker Worker {WORKER_ID}] Container {container.id[:12]} launched")

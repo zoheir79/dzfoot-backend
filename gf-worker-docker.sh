@@ -63,6 +63,8 @@ while true; do
     docker run -d --rm \
         --name "gf-${ROOM_ID}" \
         --network "$GF_NETWORK" \
+        --log-opt max-size=10m \
+        --log-opt max-file=3 \
         -e LIVEKIT_URL="$LIVEKIT_URL" \
         -e LIVEKIT_TOKEN="$TOKEN" \
         -e REDIS_URL="$REDIS_URL" \

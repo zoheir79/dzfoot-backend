@@ -1,4 +1,5 @@
 import os
+import glob
 import json
 from typing import Optional
 from uuid import UUID
@@ -38,10 +39,40 @@ def _is_uuid(s: str) -> bool:
         return False
 
 
+async def run_migrations() -> bool:
+    """Apply catalog/migrations/*.sql once each (tracked in schema_migrations)."""
+    applied_any = False
+    folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "migrations")
+    async with engine.begin() as conn:
+        await conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ DEFAULT now())"))
+        for path in sorted(glob.glob(os.path.join(folder, "*.sql"))):
+            name = os.path.basename(path)
+            done = await conn.execute(text("SELECT 1 FROM schema_migrations WHERE name=:n"), {"n": name})
+            if done.first():
+                continue
+            with open(path, encoding="utf-8") as f:
+                lines = [l for l in f.read().splitlines() if not l.strip().startswith("--")]
+            for stmt in "\n".join(lines).split(";"):
+                if stmt.strip():
+                    await conn.execute(text(stmt))
+            await conn.execute(text("INSERT INTO schema_migrations (name) VALUES (:n)"), {"n": name})
+            print(f"[Catalog] migration applied: {name}")
+            applied_any = True
+    return applied_any
+
+
 @app.on_event("startup")
 async def startup():
     global redis
     redis = await aioredis.from_url(REDIS_URL, decode_responses=True)
+    try:
+        if await run_migrations():
+            for pattern in ("team:*", "teams:all"):
+                async for k in redis.scan_iter(pattern):
+                    await redis.delete(k)
+    except Exception as e:
+        print(f"[Catalog] migration failed: {e}")
 
 
 @app.on_event("shutdown")
@@ -147,7 +178,7 @@ async def team_formation(team_id: str):
         }
 
         # Fetch all 11 players with full skill profiles + avatar config + photo
-        avatar_cols = "skin_color, hair_style, hair_color, body_type, beard_style, eye_color"
+        avatar_cols = "skin_color, hair_style, hair_color, body_type, beard_style, eye_color, height"
         photo_cols = "photo_url, photo_local"
         cols = ", ".join(SKILL_COLS)
         prow = await session.execute(
@@ -169,7 +200,7 @@ async def team_formation(team_id: str):
                 "body_type": int(pd.get("body_type", 1)),
                 "beard_style": int(pd.get("beard_style", 0)),
                 "eye_color": int(pd.get("eye_color", 0)),
-                "height": 1.78,
+                "height": float(pd["height"]) if pd.get("height") is not None else None,
                 "photo_url": pd.get("photo_url") or "",
                 "photo_local": pd.get("photo_local") or "",
             })
